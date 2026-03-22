@@ -32,34 +32,42 @@ public class JwtTokenProvider {
     private long jwtExpirationMs;
     
     /**
-     * Generate JWT token from UserDetails
+     * Generate JWT token with user ID in claims
      */
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, Long userId) {
         Map<String, Object> claims = new HashMap<>();
-        
+
         // Add roles to claims
         List<String> roles = userDetails.getAuthorities()
             .stream()
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.toList());
         claims.put("roles", roles);
-        
+        claims.put("userId", userId);
+
         return createToken(claims, userDetails.getUsername());
     }
-    
+
+    /**
+     * Generate JWT token from UserDetails
+     */
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(userDetails, (Long) null);
+    }
+
     /**
      * Generate JWT token with custom claims
      */
     public String generateToken(UserDetails userDetails, Map<String, Object> additionalClaims) {
         Map<String, Object> claims = new HashMap<>(additionalClaims);
-        
+
         // Add roles to claims
         List<String> roles = userDetails.getAuthorities()
             .stream()
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.toList());
         claims.put("roles", roles);
-        
+
         return createToken(claims, userDetails.getUsername());
     }
     
@@ -98,6 +106,22 @@ public class JwtTokenProvider {
         return getClaimsFromToken(token).getSubject();
     }
     
+    /**
+     * Get user ID from JWT token (stored in claims)
+     */
+    public Long getUserIdFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object userId = claims.get("userId");
+        if (userId == null) return null;
+        if (userId instanceof Integer) return ((Integer) userId).longValue();
+        if (userId instanceof Long) return (Long) userId;
+        try {
+            return Long.parseLong(userId.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     /**
      * Get roles from JWT token
      */

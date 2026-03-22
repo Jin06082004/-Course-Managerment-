@@ -287,8 +287,9 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/api.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-    
+
     <script>
         feather.replace();
         
@@ -340,7 +341,7 @@
                     };
                     
                     console.log('Login successful, saving auth:', {token: data.token, user: userInfo});
-                    AuthManager.saveAuth(data.token, userInfo);
+                    window.AuthManager.saveAuth(data.token, userInfo);
                     
                     // Redirect to my courses or home
                     setTimeout(() => {

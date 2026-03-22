@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cai dat tai khoan | CourseManager</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <style>
+        .settings-page {
+            padding: var(--spacing-3xl) var(--spacing-lg);
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(255, 107, 53, 0.05) 100%);
+        }
+        .settings-container {
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xl);
+        }
+        .settings-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .settings-card-header {
+            padding: var(--spacing-xl);
+            background: var(--bg-hover);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        .settings-card-header h2 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .settings-card-body {
+            padding: var(--spacing-xl);
+        }
+        .form-group {
+            margin-bottom: var(--spacing-xl);
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        .form-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-top: var(--spacing-xs);
+        }
+        .form-error {
+            font-size: 0.8rem;
+            color: #ef4444;
+            margin-top: var(--spacing-xs);
+            display: none;
+        }
+        .form-error.show {
+            display: block;
+        }
+        .password-strength {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+        }
+        .strength-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: var(--spacing-sm);
+            height: 4px;
+        }
+        .strength-segment {
+            flex: 1;
+            background: var(--border-color);
+            border-radius: 2px;
+            transition: background var(--transition-fast);
+        }
+        .strength-segment.active {
+            background: var(--accent-primary);
+        }
+        .btn-save {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        .btn-save:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+        }
+        .btn-save:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .danger-zone {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .danger-zone .settings-card-header {
+            background: rgba(239, 68, 68, 0.08);
+        }
+        .danger-zone .settings-card-header h2 {
+            color: #ef4444;
+        }
+        .danger-zone .settings-card-body {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .danger-btn {
+            padding: 10px 24px;
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-top: var(--spacing-md);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        .danger-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+        .success-msg {
+            padding: var(--spacing-md);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-md);
+            color: #6ee7b7;
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-lg);
+            display: none;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        .success-msg.show {
+            display: flex;
+        }
+        .info-box {
+            padding: var(--spacing-md);
+            background: rgba(124, 58, 237, 0.08);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .settings-container { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+
+    <div class="settings-page">
+        <div class="settings-container">
+
+            <!-- Change Password Card -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i data-feather="lock" style="color: var(--accent-primary);"></i>
+                    <h2>Đổi mật khẩu</h2>
+                </div>
+                <div class="settings-card-body">
+                    <div class="info-box">
+                        <i data-feather="info" style="width:16px;height:16px;color:var(--accent-primary);flex-shrink:0;margin-top:2px;"></i>
+                        <span>Sử dụng mật khẩu mạnh để bảo vệ tài khoản. Mật khẩu phải có ít nhất 6 ký tự.</span>
+                    </div>
+
+                    <div class="success-msg" id="passwordSuccess">
+                        <i data-feather="check-circle" style="width:18px;height:18px;"></i>
+                        <span>Đổi mật khẩu thành công!</span>
+                    </div>
+
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Mật khẩu hiện tại</label>
+                            <input type="password" id="currentPassword" name="currentPassword"
+                                   placeholder="Nhập mật khẩu hiện tại" required>
+                            <div class="form-error" id="currentPasswordError">Mật khẩu không đúng</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newPassword">Mật khẩu mới</label>
+                            <input type="password" id="newPassword" name="newPassword"
+                                   placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)" required
+                                   oninput="updatePasswordStrength()">
+                            <div class="form-error" id="newPasswordError">Mật khẩu phải có ít nhất 6 ký tự</div>
+                            <div class="password-strength" id="passwordStrengthBox" style="display: none;">
+                                <div class="strength-bar">
+                                    <div class="strength-segment" id="strength-1"></div>
+                                    <div class="strength-segment" id="strength-2"></div>
+                                    <div class="strength-segment" id="strength-3"></div>
+                                </div>
+                                <span id="strengthText">Độ mạnh: Yếu</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword"
+                                   placeholder="Nhập lại mật khẩu mới" required>
+                            <div class="form-error" id="confirmPasswordError">Mật khẩu xác nhận không khớp</div>
+                        </div>
+
+                        <button type="submit" class="btn-save" id="changePasswordBtn" onclick="handleChangePassword(event)">
+                            <i data-feather="save" style="width:16px;height:16px;"></i>
+                            Đổi mật khẩu
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Account Info Card -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i data-feather="user" style="color: var(--accent-primary);"></i>
+                    <h2>Thông tin tài khoản</h2>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" id="infoUsername" disabled>
+                        <p class="form-hint">Tên đăng nhập không thể thay đổi.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="infoEmail" disabled>
+                        <p class="form-hint">Liên hệ hỗ trợ để thay đổi email.</p>
+                    </div>
+                    <a href="/profile" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:8px;margin-top:var(--spacing-sm);text-decoration:none;">
+                        <i data-feather="edit-2" style="width:16px;height:16px;"></i>
+                        Chỉnh sửa hồ sơ
+                    </a>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="settings-card danger-zone">
+                <div class="settings-card-header">
+                    <i data-feather="alert-triangle" style="color:#ef4444;"></i>
+                    <h2>Vùng nguy hiểm</h2>
+                </div>
+                <div class="settings-card-body">
+                    <p>Xóa tài khoản là hành động vĩnh viễn và không thể hoàn tác. Tất cả dữ liệu sẽ bị mất.</p>
+                    <button class="danger-btn" onclick="handleDeleteAccount()">
+                        <i data-feather="trash-2" style="width:16px;height:16px;"></i>
+                        Xóa tài khoản
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-bottom">
+                <p>2024 CourseManager</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/toast.js}"></script>
+    <script th:src="@{/js/api.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAccountInfo();
+            feather.replace();
+        });
+
+        async function loadAccountInfo() {
+            var token = window.AuthManager && window.AuthManager.getToken && window.AuthManager.getToken();
+            if (!token) {
+                window.location.href = '/login?redirect=/settings';
+                return;
+            }
+            try {
+                var profile = await ApiService.getProfile();
+                document.getElementById('infoUsername').value = profile.username || '';
+                document.getElementById('infoEmail').value = profile.email || '';
+            } catch (err) {
+                console.error('Failed to load account info:', err);
+            }
+        }
+
+        function updatePasswordStrength() {
+            var password = document.getElementById('newPassword').value;
+            var box = document.getElementById('passwordStrengthBox');
+            var seg1 = document.getElementById('strength-1');
+            var seg2 = document.getElementById('strength-2');
+            var seg3 = document.getElementById('strength-3');
+            var text = document.getElementById('strengthText');
+
+            if (password.length === 0) {
+                box.style.display = 'none';
+                return;
+            }
+            box.style.display = 'block';
+
+            var strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 12) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[!@#$%^&*]/.test(password)) strength++;
+
+            var labels = ['Yếu', 'Khá', 'Mạnh', 'Rất mạnh', 'Hoàn hảo'];
+            var segments = [seg1, seg2, seg3];
+
+            for (var i = 0; i < segments.length; i++) {
+                if (i < Math.min(strength, 3)) {
+                    segments[i].classList.add('active');
+                } else {
+                    segments[i].classList.remove('active');
+                }
+            }
+            text.textContent = 'Độ mạnh: ' + (labels[Math.min(strength, 4)] || 'Yếu');
+        }
+
+        async function handleChangePassword(event) {
+            event.preventDefault();
+
+            var currentPwd = document.getElementById('currentPassword').value;
+            var newPwd = document.getElementById('newPassword').value;
+            var confirmPwd = document.getElementById('confirmPassword').value;
+
+            // Hide all errors
+            var errors = document.querySelectorAll('.form-error');
+            for (var i = 0; i < errors.length; i++) errors[i].classList.remove('show');
+            document.getElementById('passwordSuccess').classList.remove('show');
+
+            if (newPwd.length < 6) {
+                document.getElementById('newPasswordError').classList.add('show');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                document.getElementById('confirmPasswordError').classList.add('show');
+                return;
+            }
+
+            var btn = document.getElementById('changePasswordBtn');
+            var originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-feather="loader" style="width:16px;height:16px;animation:spin 1s linear infinite;"></i> Dang xu ly...';
+            feather.replace();
+
+            try {
+                var response = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + window.AuthManager.getToken()
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPwd,
+                        newPassword: newPwd
+                    })
+                });
+
+                var data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('passwordSuccess').classList.add('show');
+                    document.getElementById('changePasswordForm').reset();
+                    document.getElementById('passwordStrengthBox').style.display = 'none';
+                    if (window.ToastManager) {
+                        window.ToastManager.success('Đổi mật khẩu thành công!');
+                    }
+                    setTimeout(function() {
+                        document.getElementById('passwordSuccess').classList.remove('show');
+                    }, 5000);
+                } else {
+                    if (data.error && (data.error.indexOf('incorrect') !== -1 || data.error.indexOf('không đúng') !== -1)) {
+                        document.getElementById('currentPasswordError').classList.add('show');
+                    } else {
+                        if (window.ToastManager) {
+                            window.ToastManager.error(data.error || 'Không thể đổi mật khẩu');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Change password error:', err);
+                if (window.ToastManager) {
+                    window.ToastManager.error('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                feather.replace();
+            }
+        }
+
+        function handleDeleteAccount() {
+            if (confirm('Ban co chan muon xoa tai khoan? Hanh dong nay khong the hoan tac.')) {
+                if (confirm('Tai khoan se bi xoa vinh vien. Tiep tuc?')) {
+                    if (window.ToastManager) {
+                        window.ToastManager.warning('Lien he ho tro de xoa tai khoan.');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -26,19 +26,20 @@ public class WebConfig implements WebMvcConfigurer {
     
     /**
      * Configure static resource handlers
+     *
+     * FIX: Spring Boot's default already serves:
+     *   /static/**  → classpath:/static/
+     *   /css/**     → classpath:/static/css/
+     *   /js/**      → classpath:/static/js/
+     *   /images/**  → classpath:/static/images/
+     *
+     * The old config registered /js/** → classpath:/js/ (WRONG — directory doesn't exist),
+     * which overrode Spring Boot's default and broke ALL JS loading.
+     * Remove redundant / conflicting handlers; let Spring Boot defaults handle everything.
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/static/**")
-            .addResourceLocations("classpath:/static/");
-        
-        registry.addResourceHandler("/images/**")
-            .addResourceLocations("classpath:/images/");
-        
-        registry.addResourceHandler("/css/**")
-            .addResourceLocations("classpath:/css/");
-        
-        registry.addResourceHandler("/js/**")
-            .addResourceLocations("classpath:/js/");
+        // No-op: rely on Spring Boot auto-configured static resource handlers.
+        // Explicit handlers are only needed for non-standard paths.
     }
 }

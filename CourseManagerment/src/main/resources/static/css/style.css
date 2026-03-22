@@ -1372,3 +1372,36 @@ input, textarea, select {
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
 }
+
+/* ============================================ */
+/* WISHLIST BUTTON                              */
+/* ============================================ */
+
+.wishlist-btn {
+    color: var(--text-tertiary) !important;
+    transition: all var(--transition-fast) !important;
+    padding: 8px !important;
+    border-radius: 50% !important;
+}
+
+.wishlist-btn:hover {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    transform: scale(1.1) !important;
+}
+
+.wishlist-btn.active {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.wishlist-btn.active svg {
+    fill: #ef4444;
+    stroke: #ef4444;
+}
+
+.wishlist-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}

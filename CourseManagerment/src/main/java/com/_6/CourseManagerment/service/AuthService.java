@@ -148,8 +148,8 @@ public class AuthService {
                 throw new RuntimeException("Account is locked. Please contact support.");
             }
             
-            // Generate JWT token
-            String token = jwtTokenProvider.generateToken(userDetails);
+            // Generate JWT token (with userId in claims)
+            String token = jwtTokenProvider.generateToken(userDetails, user.getId());
             
             log.info("User logged in successfully: {}", user.getUsername());
             
@@ -185,7 +185,7 @@ public class AuthService {
                 .collect(Collectors.toList()))
             .build();
         
-        return jwtTokenProvider.generateToken(userDetails);
+        return jwtTokenProvider.generateToken(userDetails, user.getId());
     }
     
     /**

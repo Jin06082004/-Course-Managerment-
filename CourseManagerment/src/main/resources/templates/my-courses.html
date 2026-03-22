@@ -1,89 +1,93 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Courses | Course Manager</title>
-    
+    <title>Khóa học của tôi | CourseManager</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
-    
     <style>
         .my-courses-page {
             padding: var(--spacing-xl) var(--spacing-lg);
             background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
             min-height: 100vh;
         }
-        
         .my-courses-container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
         .page-header {
             margin-bottom: var(--spacing-2xl);
         }
-        
         .page-header h1 {
             font-family: var(--font-display);
             font-size: 2.5rem;
             font-weight: 800;
-            color: var(--text-primary);
             margin-bottom: var(--spacing-sm);
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
         .page-header p {
             color: var(--text-secondary);
             font-size: 1.1rem;
         }
-        
+
         /* Tab Navigation */
         .tab-nav {
             display: flex;
-            gap: var(--spacing-lg);
+            gap: var(--spacing-md);
             margin-bottom: var(--spacing-2xl);
             border-bottom: 2px solid var(--border-color);
-            padding-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            overflow-x: auto;
         }
-        
         .tab-nav button {
             background: none;
             border: none;
-            padding: var(--spacing-md) 0;
+            padding: var(--spacing-md) var(--spacing-xl);
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all var(--transition-normal);
             position: relative;
+            white-space: nowrap;
+            border-radius: var(--radius-md);
         }
-        
         .tab-nav button:hover {
             color: var(--accent-primary);
+            background: rgba(255, 107, 53, 0.08);
         }
-        
         .tab-nav button.active {
             color: var(--accent-primary);
+            background: rgba(255, 107, 53, 0.1);
         }
-        
-        .tab-nav button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -var(--spacing-lg);
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        .tab-nav button .tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: var(--spacing-sm);
+            color: var(--text-tertiary);
+            transition: all var(--transition-fast);
         }
-        
+        .tab-nav button.active .tab-count {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
         /* Course Grid */
         .courses-grid {
             display: grid;
@@ -91,7 +95,8 @@
             gap: var(--spacing-xl);
             margin-bottom: var(--spacing-2xl);
         }
-        
+
+        /* Course Card */
         .course-card {
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
@@ -101,215 +106,273 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            box-shadow: var(--shadow);
+            position: relative;
         }
-        
         .course-card:hover {
             transform: translateY(-8px);
             border-color: var(--accent-primary);
             box-shadow: 0 12px 40px rgba(255, 107, 53, 0.2);
         }
-        
-        .course-thumbnail {
-            position: relative;
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background: var(--bg-hover);
-        }
-        
+
         .course-thumbnail-container {
             position: relative;
             overflow: hidden;
         }
-        
+        .course-thumbnail {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: var(--bg-hover);
+            transition: transform var(--transition-normal);
+        }
+        .course-card:hover .course-thumbnail {
+            transform: scale(1.05);
+        }
+
         .progress-badge {
             position: absolute;
             top: var(--spacing-md);
             right: var(--spacing-md);
-            background: var(--bg-tertiary);
-            padding: var(--spacing-sm) var(--spacing-md);
+            padding: var(--spacing-xs) var(--spacing-md);
             border-radius: var(--radius-full);
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             display: flex;
             align-items: center;
-            gap: var(--spacing-sm);
+            gap: 4px;
             z-index: 10;
+            backdrop-filter: blur(8px);
         }
-        
         .progress-badge.completed {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
         }
-        
         .progress-badge.in-progress {
-            background: linear-gradient(135deg, var(--accent-primary), #fb923c);
+            background: rgba(15, 23, 42, 0.85);
             color: white;
+            border: 1px solid rgba(255, 107, 53, 0.5);
         }
-        
         .progress-badge.enrolled {
-            background: var(--bg-hover);
+            background: rgba(15, 23, 42, 0.85);
             color: var(--text-secondary);
+            border: 1px solid var(--border-color);
         }
-        
+
+        /* Card content */
         .course-content {
             padding: var(--spacing-lg);
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-        
         .course-title {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: var(--text-primary);
-            margin-bottom: var(--spacing-sm);
-            line-height: 1.3;
-            min-height: 50px;
+            margin-bottom: var(--spacing-xs);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
-        
         .course-instructor {
             color: var(--text-tertiary);
             font-size: 0.85rem;
             margin-bottom: var(--spacing-md);
         }
-        
-        /* Progress Section */
+
+        /* Progress */
         .progress-section {
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
         }
-        
         .progress-label {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-sm);
-            font-size: 0.85rem;
+            margin-bottom: var(--spacing-xs);
+            font-size: 0.8rem;
         }
-        
-        .progress-label .label-text {
-            color: var(--text-secondary);
-        }
-        
-        .progress-label .percentage {
-            color: var(--accent-primary);
-            font-weight: 700;
-        }
-        
+        .progress-label .label-text { color: var(--text-secondary); }
+        .progress-label .percentage { color: var(--accent-primary); font-weight: 700; }
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background: var(--bg-hover);
             border-radius: var(--radius-full);
             overflow: hidden;
         }
-        
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-full);
             transition: width 0.5s ease;
-            opacity: 0.8;
         }
-        
+
+        /* Course meta */
         .course-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: var(--text-tertiary);
-            font-size: 0.85rem;
-            margin-bottom: var(--spacing-lg);
-            padding-bottom: var(--spacing-lg);
+            font-size: 0.8rem;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
             border-bottom: 1px solid var(--border-color);
         }
-        
         .course-meta-item {
             display: flex;
             align-items: center;
-            gap: var(--spacing-sm);
+            gap: 4px;
         }
-        
         .course-meta-item i {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
-        
-        /* Action Buttons */
+
+        /* Card actions */
         .course-actions {
             display: flex;
             gap: var(--spacing-sm);
             margin-top: auto;
         }
-        
         .continue-btn {
             flex: 1;
-            padding: 12px;
+            padding: 10px 12px;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             color: white;
             border: none;
             border-radius: var(--radius-md);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all var(--transition-fast);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--spacing-sm);
+            gap: 6px;
         }
-        
         .continue-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
         }
-        
         .continue-btn.completed {
             background: linear-gradient(135deg, #10b981, #059669);
         }
-        
+        .continue-btn.completed:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .continue-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Dropdown menu */
+        .more-dropdown {
+            position: relative;
+        }
         .more-btn {
-            padding: 12px 16px;
+            padding: 10px 12px;
             background: var(--bg-hover);
             color: var(--text-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             cursor: pointer;
             transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
         }
-        
         .more-btn:hover {
             background: var(--bg-tertiary);
             color: var(--accent-primary);
             border-color: var(--accent-primary);
         }
-        
+        .more-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        .dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            min-width: 180px;
+            margin-bottom: var(--spacing-sm);
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: all var(--transition-fast);
+            z-index: 100;
+            overflow: hidden;
+        }
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .dropdown-item:hover {
+            background: var(--bg-hover);
+            color: var(--accent-primary);
+        }
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        .dropdown-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Last accessed */
+        .last-accessed {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: var(--spacing-sm);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
             padding: var(--spacing-3xl);
             background: var(--bg-tertiary);
             border: 2px dashed var(--border-color);
-            border-radius: var(--radius-lg);
+            border-radius: var(--radius-xl);
         }
-        
         .empty-state i {
             width: 80px;
             height: 80px;
             color: var(--text-tertiary);
-            margin-bottom: var(--spacing-xl);
-            opacity: 0.5;
+            margin: 0 auto var(--spacing-xl);
+            opacity: 0.4;
+            display: block;
         }
-        
         .empty-state h3 {
             color: var(--text-primary);
             margin-bottom: var(--spacing-md);
+            font-family: var(--font-display);
         }
-        
         .empty-state p {
             color: var(--text-secondary);
             margin-bottom: var(--spacing-xl);
         }
-        
         .explore-btn {
             padding: 12px 30px;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
@@ -319,288 +382,378 @@
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-fast);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
         .explore-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
         }
-        
-        /* Last Accessed */
-        .last-accessed {
-            font-size: 0.8rem;
-            color: var(--text-tertiary);
-            margin-top: var(--spacing-sm);
-        }
-        
+
         @media (max-width: 768px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .courses-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .tab-nav {
-                overflow-x: auto;
-                gap: var(--spacing-sm);
-            }
+            .page-header h1 { font-size: 1.8rem; }
+            .courses-grid { grid-template-columns: 1fr; }
+            .tab-nav { gap: var(--spacing-sm); }
+            .tab-nav button { padding: var(--spacing-sm) var(--spacing-md); }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
     <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
-    
-    <!-- My Courses Page -->
+
     <div class="my-courses-page">
         <div class="my-courses-container">
             <!-- Page Header -->
             <div class="page-header">
-                <h1>My Learning</h1>
-                <p>Continue your journey and complete your courses</p>
+                <h1>Khóa học của tôi</h1>
+                <p>Theo dõi tiến độ học tập của bạn</p>
             </div>
-            
+
             <!-- Tab Navigation -->
             <div class="tab-nav">
-                <button class="active" onclick="filterCourses('all')">
-                    All Courses
+                <button class="active" onclick="filterCourses('all', event)">
+                    Tất cả
+                    <span class="tab-count" id="countAll">0</span>
                 </button>
-                <button onclick="filterCourses('active')">
-                    In Progress
+                <button onclick="filterCourses('active', event)">
+                    Đang học
+                    <span class="tab-count" id="countActive">0</span>
                 </button>
-                <button onclick="filterCourses('completed')">
-                    Completed
+                <button onclick="filterCourses('completed', event)">
+                    Đã hoàn thành
+                    <span class="tab-count" id="countCompleted">0</span>
                 </button>
             </div>
-            
+
             <!-- Courses Grid -->
             <div class="courses-grid" id="coursesContainer">
-                <!-- Courses will be loaded here by JavaScript -->
             </div>
         </div>
     </div>
-    
-    <!-- Footer -->
+
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>Course Manager</h3>
-                    <p>Learn programming the smart way.</p>
+                    <h3>CourseManager</h3>
+                    <p>Học lập trình theo cách thông minh.</p>
                 </div>
+                <div class="footer-section">
+                    <h4>Khám phá</h4>
+                    <ul>
+                        <li><a href="/">Trang chủ</a></li>
+                        <li><a href="/courses">Khóa học</a></li>
+                        <li><a href="/profile">Hồ sơ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Liên hệ</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Pháp lý</h4>
+                    <ul>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Điều khoản dịch vụ</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 CourseManager. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    
-    <!-- Scripts -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
-    <script th:src="@{/js/main.js}"></script>
-    
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/toast.js}"></script>
+    <script th:src="@{/js/api.js}"></script>
+
     <script>
-        // Global state
-        let allEnrollments = [];
-        let currentFilter = 'all';
-        
-        // Load enrollments on page load
+        var allEnrollments = [];
+        var currentFilter = 'all';
+
         document.addEventListener('DOMContentLoaded', function() {
             loadEnrollments();
         });
-        
-        /**
-         * Load enrollments from API
-         */
+
+        function filterCourses(filter, event) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-nav button').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            if (event && event.target.closest) {
+                var btn = event.target.closest('button');
+                if (btn) btn.classList.add('active');
+            }
+            loadEnrollments();
+        }
+
         async function loadEnrollments() {
-            const token = localStorage.getItem('auth_token');
+            var token = window.AuthManager && window.AuthManager.getToken && window.AuthManager.getToken();
             if (!token) {
                 window.location.href = '/login?redirect=/my-courses';
                 return;
             }
-            
+
+            showLoading('coursesContainer', 6);
+
             try {
-                const endpoint = currentFilter === 'all' ? '/api/enrollments/my-courses' :
-                                currentFilter === 'active' ? '/api/enrollments/active' :
-                                '/api/enrollments/completed';
-                
-                const response = await fetch(endpoint + '?page=0&size=20', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load enrollments');
-                }
-                
-                const data = await response.json();
+                var data = await ApiService.getMyEnrollments({ page: 0, size: 50 });
                 allEnrollments = data.content || [];
+
+                // Update tab counts
+                var total = allEnrollments.length;
+                var active = 0, completed = 0;
+                for (var i = 0; i < allEnrollments.length; i++) {
+                    var s = allEnrollments[i].status;
+                    if (s === 'COMPLETED') completed++;
+                    else active++;
+                }
+                document.getElementById('countAll').textContent = total;
+                document.getElementById('countActive').textContent = active;
+                document.getElementById('countCompleted').textContent = completed;
+
                 renderCourses();
             } catch (error) {
                 console.error('Error:', error);
-                showEmptyState();
+                showEmptyState('Không thể tải danh sách khóa học.');
             }
         }
-        
-        /**
-         * Filter courses by status
-         */
-        function filterCourses(filter) {
-            currentFilter = filter;
-            
-            // Update active tab
-            document.querySelectorAll('.tab-nav button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Reload data
-            loadEnrollments();
+
+        function getFilteredEnrollments() {
+            if (currentFilter === 'all') return allEnrollments;
+            if (currentFilter === 'completed') {
+                return allEnrollments.filter(function(e) { return e.status === 'COMPLETED'; });
+            }
+            return allEnrollments.filter(function(e) { return e.status !== 'COMPLETED'; });
         }
-        
-        /**
-         * Render courses in grid
-         */
+
         function renderCourses() {
-            const container = document.getElementById('coursesContainer');
-            
-            if (allEnrollments.length === 0) {
+            var container = document.getElementById('coursesContainer');
+            var filtered = getFilteredEnrollments();
+
+            if (filtered.length === 0) {
                 showEmptyState();
                 return;
             }
-            
-            container.innerHTML = allEnrollments.map(enrollment => `
-                <div class="course-card">
-                    <div class="course-thumbnail-container">
-                        <img src="${enrollment.courseThumbnail || 'https://via.placeholder.com/300x180'}" 
-                             alt="${enrollment.courseTitle}" 
-                             class="course-thumbnail">
-                        <div class="progress-badge ${enrollment.status.toLowerCase()}">
-                            <i data-feather="${getStatusIcon(enrollment.status)}"></i>
-                            ${getStatusLabel(enrollment.status)}
-                        </div>
-                    </div>
-                    
-                    <div class="course-content">
-                        <h3 class="course-title">${enrollment.courseTitle}</h3>
-                        <p class="course-instructor">by ${enrollment.instructorName}</p>
-                        
-                        <div class="course-meta">
-                            <span class="course-meta-item">
-                                <i data-feather="book"></i>
-                                ${enrollment.courseLevel}
-                            </span>
-                            <span class="course-meta-item">
-                                <i data-feather="users"></i>
-                                Started
-                            </span>
-                        </div>
-                        
-                        <div class="progress-section">
-                            <div class="progress-label">
-                                <span class="label-text">Progress</span>
-                                <span class="percentage">${Math.round(enrollment.progressPercentage || 0)}%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${enrollment.progressPercentage || 0}%"></div>
-                            </div>
-                            <p class="last-accessed">
-                                Last accessed: ${formatDate(enrollment.lastAccessedDate)}
-                            </p>
-                        </div>
-                        
-                        <div class="course-actions">
-                            <button class="continue-btn ${enrollment.status === 'COMPLETED' ? 'completed' : ''}" 
-                                    onclick="continueCourse(${enrollment.courseId})">
-                                <i data-feather="${enrollment.status === 'COMPLETED' ? 'check-circle' : 'play-circle'}"></i>
-                                ${enrollment.status === 'COMPLETED' ? 'View' : 'Continue'}
-                            </button>
-                            <button class="more-btn" onclick="courseOptions(${enrollment.id})">
-                                <i data-feather="more-vertical"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
+
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var enrollment = filtered[i];
+                var status = enrollment.status || 'ENROLLED';
+                var isCompleted = status === 'COMPLETED';
+                var progress = Math.round(enrollment.progressPercentage || 0);
+                var thumbnail = enrollment.courseThumbnail || enrollment.courseThumbnailUrl || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop';
+                var badgeClass = isCompleted ? 'completed' : (progress > 0 ? 'in-progress' : 'enrolled');
+                var badgeText = isCompleted ? 'Hoàn thành' : (progress > 0 ? 'Đang học' : 'Đã ghi danh');
+                var btnClass = isCompleted ? 'completed' : '';
+                var btnText = isCompleted ? 'Xem lại' : 'Tiếp tục học';
+                var btnIcon = isCompleted ? 'rotate-ccw' : 'play-circle';
+
+                html += '<div class="course-card" id="enrollment-' + enrollment.id + '">';
+                html += '<div class="course-thumbnail-container">';
+                html += '<img src="' + thumbnail + '" alt="' + enrollment.courseTitle + '" class="course-thumbnail"';
+                html += ' onerror="this.src=\'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop\'">';
+                html += '<div class="progress-badge ' + badgeClass + '">' + badgeText + '</div>';
+                html += '</div>';
+                html += '<div class="course-content">';
+                html += '<h3 class="course-title">' + enrollment.courseTitle + '</h3>';
+                html += '<p class="course-instructor">Giảng viên: ' + (enrollment.instructorName || 'N/A') + '</p>';
+                html += '<div class="course-meta">';
+                html += '<span class="course-meta-item"><i data-feather="bar-chart-2"></i>' + (enrollment.courseLevel || 'Mọi cấp độ') + '</span>';
+                html += '<span class="course-meta-item"><i data-feather="clock"></i>' + progress + '%</span>';
+                html += '</div>';
+                html += '<div class="progress-section">';
+                html += '<div class="progress-label">';
+                html += '<span class="label-text">Tiến độ</span>';
+                html += '<span class="percentage">' + progress + '%</span>';
+                html += '</div>';
+                html += '<div class="progress-bar"><div class="progress-fill" style="width:' + progress + '%"></div></div>';
+                html += '</div>';
+                html += '<p class="last-accessed">Lần cuối: ' + formatDate(enrollment.lastAccessedDate) + '</p>';
+                html += '<div class="course-actions">';
+                html += '<button class="continue-btn ' + btnClass + '" onclick="continueCourse(' + enrollment.courseId + ', ' + enrollment.id + ')">';
+                html += '<i data-feather="' + btnIcon + '"></i> ' + btnText + '</button>';
+                html += '<div class="more-dropdown">';
+                html += '<button class="more-btn" onclick="toggleCourseMenu(this, event)"><i data-feather="more-vertical"></i></button>';
+                html += '<div class="dropdown-menu">';
+                html += '<button class="dropdown-item" onclick="handleAddToWishlist(' + enrollment.courseId + ', this)">';
+                html += '<i data-feather="heart"></i> Thêm vào wishlist</button>';
+                html += '<button class="dropdown-item" onclick="handleShareCourse(' + enrollment.courseId + ')">';
+                html += '<i data-feather="share-2"></i> Chia sẻ</button>';
+                html += '<hr style="border:none;border-top:1px solid var(--border-color);margin:4px 0;">';
+                html += '<button class="dropdown-item danger" onclick="handleUnenroll(' + enrollment.id + ', ' + enrollment.courseId + ', this)">';
+                html += '<i data-feather="trash-2"></i> Hủy ghi danh</button>';
+                html += '</div></div></div></div></div>';
+            }
+            container.innerHTML = html;
             feather.replace();
         }
-        
-        /**
-         * Show empty state
-         */
-        function showEmptyState() {
-            const container = document.getElementById('coursesContainer');
-            container.innerHTML = `
-                <div style="grid-column: 1 / -1;">
-                    <div class="empty-state">
-                        <i data-feather="inbox"></i>
-                        <h3>No courses yet</h3>
-                        <p>Start learning by enrolling in a course from our catalog</p>
-                        <a href="/courses" style="text-decoration: none;">
-                            <button class="explore-btn">Explore Courses</button>
-                        </a>
-                    </div>
-                </div>
-            `;
+
+        function showEmptyState(message) {
+            var container = document.getElementById('coursesContainer');
+            var msg = message || (currentFilter === 'completed'
+                ? 'Bạn chưa hoàn thành khóa học nào.'
+                : 'Bạn chưa ghi danh khóa học nào.');
+            var actionText = currentFilter === 'all' ? 'Khám phá khóa học' : 'Quay lại';
+            var actionHref = currentFilter === 'all' ? '/courses' : 'javascript:filterCourses(\'all\', event)';
+            container.innerHTML = '<div style="grid-column: 1 / -1;">' +
+                '<div class="empty-state">' +
+                '<i data-feather="book-open"></i>' +
+                '<h3>' + msg + '</h3>' +
+                '<p>Đăng ký khóa học để bắt đầu hành trình học tập.</p>' +
+                (currentFilter === 'all'
+                    ? '<a href="/courses" class="explore-btn"><i data-feather="search" style="width:18px;height:18px;"></i> Khám phá khóa học</a>'
+                    : '<button class="explore-btn" onclick="filterCourses(\'all\', event)"><i data-feather="arrow-left" style="width:18px;height:18px;"></i> Tất cả khóa học</button>')
+                + '</div></div></div>';
             feather.replace();
         }
-        
-        /**
-         * Get status icon
-         */
-        function getStatusIcon(status) {
-            switch(status) {
-                case 'COMPLETED': return 'check-circle';
-                case 'IN_PROGRESS': return 'play-circle';
-                default: return 'bookmark';
+
+        function showLoading(containerId, count) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            var html = '';
+            for (var i = 0; i < count; i++) {
+                html += '<div class="course-card" style="opacity:0.6;">' +
+                    '<div style="height:160px;background:var(--bg-hover);"></div>' +
+                    '<div style="padding:var(--spacing-lg);display:flex;flex-direction:column;gap:8px;">' +
+                    '<div style="height:1.2em;width:85%;background:var(--bg-hover);border-radius:4px;animation:pulse 1.5s infinite;"></div>' +
+                    '<div style="height:0.9em;width:50%;background:var(--bg-hover);border-radius:4px;animation:pulse 1.5s infinite;"></div>' +
+                    '</div></div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleCourseMenu(btn, event) {
+            event.stopPropagation();
+            var menu = btn.nextElementSibling;
+            document.querySelectorAll('.dropdown-menu.active').forEach(function(m) {
+                if (m !== menu) m.classList.remove('active');
+            });
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.dropdown-menu.active').forEach(function(m) {
+                m.classList.remove('active');
+            });
+        });
+
+        function continueCourse(courseId, enrollmentId) {
+            window.location.href = '/learn/' + courseId;
+        }
+
+        async function handleAddToWishlist(courseId, btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i data-feather="loader" style="width:16px;height:16px;animation:spin 1s linear infinite;"></i> Đang thêm...';
+            feather.replace();
+            try {
+                var data = await ApiService.toggleWishlist(courseId);
+                ApiService.setWishlistCached(courseId, data.inWishlist);
+                btn.disabled = false;
+                if (data.inWishlist) {
+                    btn.innerHTML = '<i data-feather="heart"></i> Đã thêm!';
+                } else {
+                    btn.innerHTML = '<i data-feather="heart"></i> Thêm vào wishlist';
+                }
+                feather.replace();
+                if (window.ToastManager) {
+                    window.ToastManager.success(data.inWishlist ? 'Đã thêm vào wishlist' : 'Đã xóa khỏi wishlist');
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-feather="heart"></i> Thêm vào wishlist';
+                feather.replace();
+                if (window.ToastManager) {
+                    window.ToastManager.error('Không thể cập nhật wishlist');
+                }
             }
         }
-        
-        /**
-         * Get status label
-         */
-        function getStatusLabel(status) {
-            switch(status) {
-                case 'COMPLETED': return 'Completed';
-                case 'IN_PROGRESS': return 'In Progress';
-                default: return 'Enrolled';
+
+        function handleShareCourse(courseId) {
+            var url = window.location.origin + '/courses/' + courseId;
+            if (navigator.share) {
+                navigator.share({ title: 'Chia sẻ khóa học', url: url });
+            } else {
+                navigator.clipboard.writeText(url).then(function() {
+                    if (window.ToastManager) {
+                        window.ToastManager.success('Đã sao chép link khóa học!');
+                    }
+                });
             }
         }
-        
-        /**
-         * Navigate to course learning page
-         */
-        function continueCourse(courseId) {
-            window.location.href = `/learn/${courseId}`;
+
+        async function handleUnenroll(enrollmentId, courseId, btn) {
+            if (!confirm('Bạn có chắc muốn hủy ghi danh khóa học này?')) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-feather="loader" style="width:16px;height:16px;animation:spin 1s linear infinite;"></i> Đang hủy...';
+            feather.replace();
+
+            try {
+                await ApiService.unenrollFromCourse(courseId);
+                var card = document.getElementById('enrollment-' + enrollmentId);
+                if (card) {
+                    card.style.transition = 'opacity 0.3s, transform 0.3s';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(function() { card.remove(); }, 300);
+                }
+                allEnrollments = allEnrollments.filter(function(e) { return e.id !== enrollmentId; });
+                // Update counts
+                var total = allEnrollments.length;
+                var active = 0, completed = 0;
+                for (var i = 0; i < allEnrollments.length; i++) {
+                    var s = allEnrollments[i].status;
+                    if (s === 'COMPLETED') completed++;
+                    else active++;
+                }
+                document.getElementById('countAll').textContent = total;
+                document.getElementById('countActive').textContent = active;
+                document.getElementById('countCompleted').textContent = completed;
+                if (allEnrollments.filter(function(e) { return e.id !== enrollmentId; }).length === 0) {
+                    showEmptyState();
+                }
+                if (window.ToastManager) {
+                    window.ToastManager.success('Đã hủy ghi danh khóa học');
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-feather="trash-2"></i> Hủy ghi danh';
+                feather.replace();
+                if (window.ToastManager) {
+                    window.ToastManager.error('Không thể hủy ghi danh');
+                }
+            }
         }
-        
-        /**
-         * Course options menu
-         */
-        function courseOptions(enrollmentId) {
-            alert('More options coming soon: Share, Download, etc.');
-        }
-        
-        /**
-         * Format date
-         */
+
         function formatDate(dateString) {
-            if (!dateString) return 'Never';
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 60) return `${diffMins}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            if (diffDays < 7) return `${diffDays}d ago`;
-            
-            return date.toLocaleDateString();
+            if (!dateString) return 'Chưa có';
+            var date = new Date(dateString);
+            var now = new Date();
+            var diffMs = now - date;
+            var diffMins = Math.floor(diffMs / 60000);
+            var diffHours = Math.floor(diffMs / 3600000);
+            var diffDays = Math.floor(diffMs / 86400000);
+            if (diffMins < 1) return 'Vừa xong';
+            if (diffMins < 60) return diffMins + ' phút trước';
+            if (diffHours < 24) return diffHours + ' giờ trước';
+            if (diffDays < 7) return diffDays + ' ngày trước';
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
     </script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 </html>

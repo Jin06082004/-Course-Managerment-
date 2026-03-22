@@ -3,7 +3,11 @@
  * Handles login/registration and navbar UI updates
  */
 
-const AuthManager = {
+/**
+ * Expose on window so all inline scripts and Thymeleaf pages can access it reliably.
+ * (Top-level `const` is not always visible as `window.AuthManager` in every browser context.)
+ */
+window.AuthManager = {
     TOKEN_KEY: 'authToken',
     USER_KEY: 'userInfo',
 
@@ -89,9 +93,11 @@ const AuthManager = {
             
             // Update user info in dropdown
             const userInfo_div = loggedIn.querySelector('.user-info');
+            if (!userInfo_div) return;
+
             const username_span = userInfo_div.querySelector('.username');
             const email_span = userInfo_div.querySelector('.email');
-            
+
             if (username_span) username_span.textContent = userInfo.username || '';
             if (email_span) email_span.textContent = userInfo.email || '';
             userInfo_div.style.display = 'flex';
@@ -178,7 +184,10 @@ const AuthManager = {
     }
 };
 
+// Alias for code that references `AuthManager` without `window.`
+const AuthManager = window.AuthManager;
+
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-    AuthManager.init();
+    window.AuthManager.init();
 });

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courses | Course Manager</title>
-    
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +19,7 @@
             max-width: 1400px;
             margin: 0 auto;
         }
-        
+
         .sidebar {
             display: flex;
             flex-direction: column;
@@ -29,21 +28,21 @@
             top: 100px;
             height: fit-content;
         }
-        
+
         .filter-section {
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: var(--spacing-lg);
         }
-        
+
         .filter-section h3 {
             font-size: 1rem;
             font-weight: 700;
             margin-bottom: var(--spacing-md);
             color: var(--text-primary);
         }
-        
+
         .filter-option {
             display: flex;
             align-items: center;
@@ -51,32 +50,38 @@
             margin-bottom: var(--spacing-md);
             cursor: pointer;
         }
-        
-        .filter-option input[type="checkbox"] {
+
+        .filter-option input[type="checkbox"],
+        .filter-option input[type="radio"] {
             width: 18px;
             height: 18px;
             cursor: pointer;
             accent-color: var(--accent-primary);
         }
-        
+
         .filter-option label {
             cursor: pointer;
             flex: 1;
             color: var(--text-secondary);
         }
-        
+
+        .filter-option .count {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+
         .main-content {
             display: flex;
             flex-direction: column;
             gap: var(--spacing-xl);
         }
-        
+
         .search-bar {
             display: flex;
             gap: var(--spacing-md);
             margin-bottom: var(--spacing-xl);
         }
-        
+
         .search-input {
             flex: 1;
             background: var(--bg-tertiary);
@@ -86,13 +91,13 @@
             color: var(--text-primary);
             font-size: 1rem;
         }
-        
+
         .search-input:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
         }
-        
+
         .sort-select {
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
@@ -101,22 +106,87 @@
             color: var(--text-primary);
             cursor: pointer;
         }
-        
+
         .sort-select:focus {
             outline: none;
             border-color: var(--accent-primary);
         }
-        
+
+        .results-info {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Pagination */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-xl);
+        }
+
+        .pagination-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            padding: 0 var(--spacing-md);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        /* Skeleton category */
+        .skeleton-category-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            height: 120px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         @media (max-width: 768px) {
             .courses-page {
                 grid-template-columns: 1fr;
             }
-            
+
             .sidebar {
                 position: relative;
                 top: 0;
             }
-            
+
             .search-bar {
                 flex-direction: column;
             }
@@ -124,9 +194,8 @@
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
     <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
-    
+
     <main class="main-content">
         <!-- Page Header -->
         <div style="padding: var(--spacing-3xl) var(--spacing-lg); background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%); border-bottom: 1px solid var(--border-color);">
@@ -135,235 +204,87 @@
                 <p style="color: var(--text-secondary); font-size: 1.1rem;">Find the perfect course to boost your skills</p>
             </div>
         </div>
-        
+
         <!-- Courses Page -->
         <div class="courses-page">
             <!-- Sidebar Filters -->
             <aside class="sidebar">
-                <!-- Search Filter -->
-                <div class="filter-section">
-                    <h3>Search</h3>
-                    <input type="text" placeholder="Course name..." class="search-input" style="width: 100%; padding: var(--spacing-md);">
-                </div>
-                
                 <!-- Category Filter -->
                 <div class="filter-section">
                     <h3>Category</h3>
-                    <div class="filter-option">
-                        <input type="checkbox" id="cat-web" checked>
-                        <label for="cat-web">Web Development</label>
-                    </div>
-                    <div class="filter-option">
-                        <input type="checkbox" id="cat-mobile">
-                        <label for="cat-mobile">Mobile Development</label>
-                    </div>
-                    <div class="filter-option">
-                        <input type="checkbox" id="cat-backend">
-                        <label for="cat-backend">Backend Development</label>
-                    </div>
-                    <div class="filter-option">
-                        <input type="checkbox" id="cat-design">
-                        <label for="cat-design">UI/UX Design</label>
+                    <div id="categoryFilters">
+                        <!-- Loaded via API -->
                     </div>
                 </div>
-                
+
                 <!-- Level Filter -->
                 <div class="filter-section">
                     <h3>Level</h3>
                     <div class="filter-option">
-                        <input type="checkbox" id="level-beginner" checked>
+                        <input type="radio" name="level" id="level-all" value="" checked>
+                        <label for="level-all">All Levels <span class="count"></span></label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="radio" name="level" id="level-beginner" value="BEGINNER">
                         <label for="level-beginner">Beginner</label>
                     </div>
                     <div class="filter-option">
-                        <input type="checkbox" id="level-intermediate">
+                        <input type="radio" name="level" id="level-intermediate" value="INTERMEDIATE">
                         <label for="level-intermediate">Intermediate</label>
                     </div>
                     <div class="filter-option">
-                        <input type="checkbox" id="level-advanced">
+                        <input type="radio" name="level" id="level-advanced" value="ADVANCED">
                         <label for="level-advanced">Advanced</label>
                     </div>
                 </div>
-                
+
                 <!-- Price Range Filter -->
                 <div class="filter-section">
-                    <h3>Price Range</h3>
+                    <h3>Price</h3>
                     <div class="filter-option">
-                        <input type="checkbox" id="price-free" checked>
+                        <input type="radio" name="price" id="price-all" value="" checked>
+                        <label for="price-all">All</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="radio" name="price" id="price-free" value="free">
                         <label for="price-free">Free</label>
                     </div>
                     <div class="filter-option">
-                        <input type="checkbox" id="price-paid">
+                        <input type="radio" name="price" id="price-paid" value="paid">
                         <label for="price-paid">Paid</label>
                     </div>
                 </div>
-                
-                <!-- Rating Filter -->
-                <div class="filter-section">
-                    <h3>Rating</h3>
-                    <div class="filter-option">
-                        <input type="checkbox" id="rating-4">
-                        <label for="rating-4">4★ & Above</label>
-                    </div>
-                    <div class="filter-option">
-                        <input type="checkbox" id="rating-3">
-                        <label for="rating-3">3★ & Above</label>
-                    </div>
-                </div>
             </aside>
-            
+
             <!-- Main Content -->
             <div class="main-content">
                 <!-- Search & Sort Bar -->
                 <div class="search-bar">
-                    <input type="text" placeholder="Search courses..." class="search-input" style="flex: 1;">
-                    <select class="sort-select">
-                        <option>Most Popular</option>
-                        <option>Newest</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Highest Rated</option>
+                    <input type="text" id="searchInput" placeholder="Search courses..." class="search-input">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="id,DESC">Newest</option>
+                        <option value="rating,DESC">Highest Rated</option>
+                        <option value="studentCount,DESC">Most Popular</option>
+                        <option value="price,ASC">Price: Low to High</option>
+                        <option value="price,DESC">Price: High to Low</option>
                     </select>
                 </div>
-                
+
+                <!-- Results Info -->
+                <div class="results-info" id="resultsInfo"></div>
+
                 <!-- Courses Grid -->
-                <div class="courses-grid">
-                    <!-- Sample Course Cards (Same as Home) -->
-                    <div class="course-card" data-course-id="1">
-                        <div class="card-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop" alt="Course" class="card-image">
-                            <div class="card-overlay">
-                                <a href="/courses/1" class="card-view-btn">View Course</a>
-                            </div>
-                            <span class="course-badge">Beginner</span>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="course-title">Complete JavaScript Bootcamp</h3>
-                            <p class="instructor-name">By John Smith</p>
-                            <div class="course-meta">
-                                <span class="rating"><i data-feather="star" class="star-icon"></i> 4.8 (320)</span>
-                                <span class="duration">20 hours</span>
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">$49.99</span>
-                                <button class="btn btn-icon"><i data-feather="heart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="course-card" data-course-id="2">
-                        <div class="card-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=225&fit=crop" alt="Course" class="card-image">
-                            <div class="card-overlay">
-                                <a href="/courses/2" class="card-view-btn">View Course</a>
-                            </div>
-                            <span class="course-badge">Advanced</span>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="course-title">React.js Advanced Patterns</h3>
-                            <p class="instructor-name">By Sarah Johnson</p>
-                            <div class="course-meta">
-                                <span class="rating"><i data-feather="star" class="star-icon"></i> 4.9 (521)</span>
-                                <span class="duration">25 hours</span>
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">$59.99</span>
-                                <button class="btn btn-icon"><i data-feather="heart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="course-card" data-course-id="3">
-                        <div class="card-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop" alt="Course" class="card-image">
-                            <div class="card-overlay">
-                                <a href="/courses/3" class="card-view-btn">View Course</a>
-                            </div>
-                            <span class="course-badge">Intermediate</span>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="course-title">Python Data Science Masterclass</h3>
-                            <p class="instructor-name">By Mike Chen</p>
-                            <div class="course-meta">
-                                <span class="rating"><i data-feather="star" class="star-icon"></i> 4.7 (412)</span>
-                                <span class="duration">30 hours</span>
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">$69.99</span>
-                                <button class="btn btn-icon"><i data-feather="heart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="course-card" data-course-id="4">
-                        <div class="card-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=225&fit=crop" alt="Course" class="card-image">
-                            <div class="card-overlay">
-                                <a href="/courses/4" class="card-view-btn">View Course</a>
-                            </div>
-                            <span class="course-badge">Beginner</span>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="course-title">Web Design with Figma</h3>
-                            <p class="instructor-name">By Emma Wilson</p>
-                            <div class="course-meta">
-                                <span class="rating"><i data-feather="star" class="star-icon"></i> 4.6 (289)</span>
-                                <span class="duration">15 hours</span>
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">$39.99</span>
-                                <button class="btn btn-icon"><i data-feather="heart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="course-card" data-course-id="5">
-                        <div class="card-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop" alt="Course" class="card-image">
-                            <div class="card-overlay">
-                                <a href="/courses/5" class="card-view-btn">View Course</a>
-                            </div>
-                            <span class="course-badge">Advanced</span>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="course-title">Advanced Java Programming</h3>
-                            <p class="instructor-name">By Alex Rodriguez</p>
-                            <div class="course-meta">
-                                <span class="rating"><i data-feather="star" class="star-icon"></i> 4.8 (450)</span>
-                                <span class="duration">35 hours</span>
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">$79.99</span>
-                                <button class="btn btn-icon"><i data-feather="heart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="course-card" data-course-id="6">
-                        <div class="card-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=225&fit=crop" alt="Course" class="card-image">
-                            <div class="card-overlay">
-                                <a href="/courses/6" class="card-view-btn">View Course</a>
-                            </div>
-                            <span class="course-badge">Intermediate</span>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="course-title">Cloud Computing with AWS</h3>
-                            <p class="instructor-name">By Lisa Anderson</p>
-                            <div class="course-meta">
-                                <span class="rating"><i data-feather="star" class="star-icon"></i> 4.7 (380)</span>
-                                <span class="duration">22 hours</span>
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">$64.99</span>
-                                <button class="btn btn-icon"><i data-feather="heart"></i></button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="courses-grid" id="coursesGrid">
+                    <!-- Loaded via API -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-wrapper" id="paginationWrapper">
                 </div>
             </div>
         </div>
     </main>
-    
+
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-container">
@@ -378,7 +299,6 @@
                         <a href="#" class="social-icon"><i data-feather="github"></i></a>
                     </div>
                 </div>
-                
                 <div class="footer-section">
                     <h4>Explore</h4>
                     <ul>
@@ -387,7 +307,6 @@
                         <li><a href="/my-courses">My Learning</a></li>
                     </ul>
                 </div>
-                
                 <div class="footer-section">
                     <h4>Support</h4>
                     <ul>
@@ -396,7 +315,6 @@
                         <li><a href="#">FAQ</a></li>
                     </ul>
                 </div>
-                
                 <div class="footer-section">
                     <h4>Legal</h4>
                     <ul>
@@ -405,17 +323,270 @@
                     </ul>
                 </div>
             </div>
-            
             <div class="footer-bottom">
                 <p>&copy; 2024 Course Manager. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/toast.js}"></script>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/api.js}"></script>
     <script th:src="@{/js/main.js}"></script>
+
     <script>
         feather.replace();
+
+        // =====================
+        // State
+        // =====================
+        let currentPage = 0;
+        let currentCategoryId = null;
+        let currentLevel = '';
+        let currentPrice = '';
+        let currentSearch = '';
+        let currentSort = 'id,DESC';
+        let totalPages = 0;
+        let totalElements = 0;
+        const pageSize = 9;
+
+        // =====================
+        // Load Categories
+        // =====================
+        async function loadCategories() {
+            const container = document.getElementById('categoryFilters');
+            container.innerHTML = '<div style="color: var(--text-tertiary); font-size: 0.85rem;">Loading...</div>';
+
+            try {
+                const data = await ApiService.getCategories();
+                if (Array.isArray(data) && data.length > 0) {
+                    container.innerHTML = `
+                        <div class="filter-option">
+                            <input type="radio" name="category" id="cat-all" value="" checked>
+                            <label for="cat-all">All Categories</label>
+                        </div>
+                        ${data.map(cat => `
+                            <div class="filter-option">
+                                <input type="radio" name="category" id="cat-${cat.id}" value="${cat.id}">
+                                <label for="cat-${cat.id}">${cat.name}</label>
+                            </div>
+                        `).join('')}
+                    `;
+
+                    // Apply URL params
+                    const params = new URLSearchParams(window.location.search);
+                    const catId = params.get('category');
+                    if (catId) {
+                        const radio = document.getElementById(`cat-${catId}`);
+                        if (radio) {
+                            radio.checked = true;
+                            currentCategoryId = catId;
+                        }
+                    }
+                } else {
+                    container.innerHTML = '<div style="color: var(--text-tertiary); font-size: 0.85rem;">No categories available</div>';
+                }
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+                container.innerHTML = '<div style="color: var(--text-tertiary); font-size: 0.85rem;">Failed to load categories</div>';
+            }
+        }
+
+        // =====================
+        // Load Courses
+        // =====================
+        async function loadCourses() {
+            showLoading('coursesGrid', pageSize);
+            document.getElementById('resultsInfo').textContent = 'Loading courses...';
+            document.getElementById('paginationWrapper').innerHTML = '';
+
+            try {
+                let data;
+                const sortParts = currentSort.split(',');
+                const sortBy = sortParts[0];
+                const direction = sortParts[1];
+
+                if (currentSearch || currentCategoryId || currentLevel) {
+                    data = await ApiService.searchCourses({
+                        title: currentSearch,
+                        categoryId: currentCategoryId || null,
+                        level: currentLevel,
+                        page: currentPage,
+                        size: pageSize,
+                    });
+                } else {
+                    data = await ApiService.getCourses({
+                        page: currentPage,
+                        size: pageSize,
+                        sortBy,
+                        direction,
+                    });
+                }
+
+                const content = Array.isArray(data) ? data : (data.content || []);
+                totalPages = Array.isArray(data) ? 1 : (data.totalPages || 0);
+                totalElements = Array.isArray(data) ? data.length : (data.totalElements || 0);
+
+                const grid = document.getElementById('coursesGrid');
+
+                if (content.length === 0) {
+                    showEmpty('coursesGrid', 'No courses found matching your criteria.');
+                    document.getElementById('resultsInfo').textContent = 'No courses found';
+                    document.getElementById('paginationWrapper').innerHTML = '';
+                    return;
+                }
+
+                // Filter by price if needed
+                let filtered = content;
+                if (currentPrice === 'free') {
+                    filtered = content.filter(c => !c.price || parseFloat(c.price) === 0);
+                } else if (currentPrice === 'paid') {
+                    filtered = content.filter(c => c.price && parseFloat(c.price) > 0);
+                }
+
+                if (filtered.length === 0) {
+                    showEmpty('coursesGrid', 'No courses found for the selected price range.');
+                    document.getElementById('resultsInfo').textContent = '0 courses found';
+                    return;
+                }
+
+                grid.innerHTML = filtered.map(course => renderCourseCard(course)).join('');
+                feather.replace();
+
+                // Update results info
+                const start = currentPage * pageSize + 1;
+                const end = Math.min((currentPage + 1) * pageSize, totalElements);
+                document.getElementById('resultsInfo').textContent =
+                    `Showing ${start}-${end} of ${totalElements} courses`;
+
+                renderPagination();
+            } catch (error) {
+                console.error('Failed to load courses:', error);
+                showError('coursesGrid', 'Failed to load courses. Please try again.');
+                document.getElementById('resultsInfo').textContent = '';
+            }
+        }
+
+        // =====================
+        // Render Pagination
+        // =====================
+        function renderPagination() {
+            const wrapper = document.getElementById('paginationWrapper');
+            if (totalPages <= 1) {
+                wrapper.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>
+                    <i data-feather="chevron-left"></i>
+                </button>
+            `;
+
+            const maxVisible = 5;
+            let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(0, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 0) {
+                html += `<button class="pagination-btn" onclick="goToPage(0)">1</button>`;
+                if (startPage > 1) html += `<span style="color: var(--text-tertiary);">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i + 1}</button>`;
+            }
+
+            if (endPage < totalPages - 1) {
+                if (endPage < totalPages - 2) html += `<span style="color: var(--text-tertiary);">...</span>`;
+                html += `<button class="pagination-btn" onclick="goToPage(${totalPages - 1})">${totalPages}</button>`;
+            }
+
+            html += `
+                <button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+                    <i data-feather="chevron-right"></i>
+                </button>
+            `;
+
+            wrapper.innerHTML = html;
+            feather.replace();
+        }
+
+        // =====================
+        // Navigate to page
+        // =====================
+        function goToPage(page) {
+            currentPage = page;
+            loadCourses();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // =====================
+        // Event Listeners
+        // =====================
+        // =====================
+        // Initialize
+        // =====================
+        async function initializePage() {
+            await window.AuthManager.init();
+
+            const token = window.AuthManager.getToken();
+            if (token) {
+                await ApiService.loadWishlist();
+            }
+
+            loadCategories();
+
+            // Apply URL search param
+            const params = new URLSearchParams(window.location.search);
+            const searchParam = params.get('q');
+            if (searchParam) {
+                currentSearch = searchParam;
+                document.getElementById('searchInput').value = searchParam;
+            }
+
+            loadCourses();
+        }
+
+        document.addEventListener('DOMContentLoaded', initializePage);
+
+            // Search input
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', debounce(function() {
+                currentSearch = this.value.trim();
+                currentPage = 0;
+                loadCourses();
+            }, 400));
+
+            // Sort select
+            document.getElementById('sortSelect').addEventListener('change', function() {
+                currentSort = this.value;
+                currentPage = 0;
+                loadCourses();
+            });
+
+            // Category filter
+            document.addEventListener('change', function(e) {
+                if (e.target.name === 'category') {
+                    currentCategoryId = e.target.value || null;
+                    currentPage = 0;
+                    loadCourses();
+                }
+                if (e.target.name === 'level') {
+                    currentLevel = e.target.value;
+                    currentPage = 0;
+                    loadCourses();
+                }
+                if (e.target.name === 'price') {
+                    currentPrice = e.target.value;
+                    currentPage = 0;
+                    loadCourses();
+                }
+            });
+        });
     </script>
 </body>
 </html>

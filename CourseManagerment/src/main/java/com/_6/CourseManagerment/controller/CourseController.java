@@ -2,6 +2,7 @@ package com._6.CourseManagerment.controller;
 
 import com._6.CourseManagerment.dto.CourseDto;
 import com._6.CourseManagerment.dto.CreateCourseRequest;
+import com._6.CourseManagerment.security.SecurityUtils;
 import com._6.CourseManagerment.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -241,8 +242,7 @@ public class CourseController {
      * Helper method to extract user ID from authentication
      */
     private Long extractUserIdFromAuth(Authentication authentication) {
-        // Implementation depends on how principal is stored
-        // For now, return a placeholder
-        return 1L;
+        Long userId = SecurityUtils.getCurrentUserId();
+        return userId != null ? userId : 1L;
     }
 }

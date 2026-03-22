@@ -105,13 +105,28 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints - Auth
                 .requestMatchers("/api/auth/**").permitAll()
-                
+
                 // Public endpoints - Browsing courses
                 .requestMatchers("/api/courses/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
                 
-                // Public pages
-                .requestMatchers("/", "/home", "/courses", "/courses/**", "/login", "/register").permitAll()
+                // Public pages (HTML từ Thymeleaf — trình duyệt KHÔNG gửi JWT trong localStorage khi gõ URL / F5)
+                // Xác thực thật sự vẫn do JWT trên /api/** khi frontend gọi fetch + Authorization
+                .requestMatchers(
+                        "/",
+                        "/home",
+                        "/courses",
+                        "/courses/**",
+                        "/login",
+                        "/register",
+                        "/my-courses",
+                        "/profile",
+                        "/settings",
+                        "/wishlist",
+                        "/error/404",
+                        "/error/500",
+                        "/error"
+                ).permitAll()
                 
                 // Public assets
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()

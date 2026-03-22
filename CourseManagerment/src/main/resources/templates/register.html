@@ -238,6 +238,40 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Thông báo đăng ký (banner + hỗ trợ alert) */
+        .register-banner {
+            display: none;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-lg);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .register-banner.show {
+            display: flex;
+        }
+
+        .register-banner.success {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            color: #6ee7b7;
+        }
+
+        .register-banner.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .register-banner .banner-icon {
+            flex-shrink: 0;
+            font-size: 1.25rem;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body>
@@ -247,6 +281,12 @@
     <!-- Register Page -->
     <div class="auth-page">
         <div class="auth-container">
+            <!-- Thông báo thành công / lỗi (hiển thị trên form) -->
+            <div id="registerBanner" class="register-banner" role="alert" aria-live="polite" hidden>
+                <span class="banner-icon" id="registerBannerIcon"></span>
+                <span id="registerBannerText"></span>
+            </div>
+
             <!-- Auth Header -->
             <div class="auth-header">
                 <div class="auth-logo">🎓</div>
@@ -331,10 +371,50 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/api.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-    
+
     <script>
         feather.replace();
+
+        /**
+         * Lưu token sau đăng ký — CHỈ dùng localStorage + cập nhật navbar (không gọi saveAuth)
+         * để tránh lỗi khi file JS cũ trong cache/target hoặc navbar thiếu phần tử.
+         * Khóa trùng với auth.js: authToken, userInfo
+         */
+        function saveRegistrationAuth(token, userInfo) {
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            try {
+                if (window.AuthManager && typeof window.AuthManager.updateNavbar === 'function') {
+                    window.AuthManager.updateNavbar(userInfo);
+                }
+            } catch (e) {
+                console.warn('Không cập nhật được navbar (bỏ qua):', e);
+            }
+        }
+
+        /**
+         * Hiển thị banner trong trang (không chặn như alert)
+         */
+        function showRegisterBanner(type, message) {
+            const el = document.getElementById('registerBanner');
+            const text = document.getElementById('registerBannerText');
+            const icon = document.getElementById('registerBannerIcon');
+            el.hidden = false;
+            el.classList.add('show');
+            el.classList.remove('success', 'error');
+            el.classList.add(type === 'success' ? 'success' : 'error');
+            icon.textContent = type === 'success' ? '✓' : '✕';
+            text.textContent = message;
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideRegisterBanner() {
+            const el = document.getElementById('registerBanner');
+            el.classList.remove('show', 'success', 'error');
+            el.hidden = true;
+        }
         
         // Password strength indicator
         const passwordInput = document.getElementById('password');
@@ -384,6 +464,8 @@
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+
+            hideRegisterBanner();
             
             try {
                 const response = await fetch('/api/auth/register', {
@@ -413,32 +495,35 @@
                 }
                 
                 if (response.ok && data.token) {
-                    // Save auth token and user info to localStorage via AuthManager
                     const userInfo = {
                         username: username,
                         email: email,
                         fullName: fullName,
                         role: 'STUDENT'
                     };
-                    
-                    console.log('Registration successful, saving auth:', {token: data.token, user: userInfo});
-                    AuthManager.saveAuth(data.token, userInfo);
-                    
-                    // Show success message and redirect
-                    alert('Account created successfully!');
-                    setTimeout(() => {
-                        window.location.href = '/my-courses';
-                    }, 500);
+
+                    console.log('Registration successful, saving auth:', { token: data.token, user: userInfo });
+                    saveRegistrationAuth(data.token, userInfo);
+
+                    const successMsg = 'Đăng ký thành công! Chào mừng bạn đến Course Manager. Sau khi nhấn OK sẽ chuyển đến trang Khóa học của tôi.';
+                    showRegisterBanner('success', successMsg);
+
+                    // Hộp thoại xác nhận — chuyển trang sau khi người dùng nhấn OK
+                    alert('Đăng ký thành công!\n\nTài khoản của bạn đã được tạo. Nhấn OK để vào trang "Khóa học của tôi".');
+                    window.location.href = '/my-courses';
                 } else {
-                    const errorMsg = data.message || 'Registration failed. Please try again.';
+                    const errorMsg = data.message || 'Đăng ký thất bại. Vui lòng thử lại.';
                     console.error('Registration failed:', errorMsg, data);
+                    showRegisterBanner('error', errorMsg);
                     alert(errorMsg);
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                alert('An error occurred during registration: ' + error.message);
+                const errText = 'Có lỗi xảy ra khi đăng ký: ' + error.message;
+                showRegisterBanner('error', errText);
+                alert(errText);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
             }
