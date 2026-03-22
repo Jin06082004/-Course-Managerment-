@@ -1,0 +1,244 @@
+package com._6.CourseManagerment.controller;
+
+import com._6.CourseManagerment.dto.EnrollmentDto;
+import com._6.CourseManagerment.service.EnrollmentService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/enrollments")
+@Slf4j
+public class EnrollmentController {
+    
+    @Autowired
+    private EnrollmentService enrollmentService;
+    
+    /**
+     * Get my enrollments (requires authentication)
+     */
+    @GetMapping("/my-courses")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyEnrollments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "enrollmentDate") String sortBy,
+            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+        try {
+            Long userId = extractUserIdFromAuth();
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+            Page<EnrollmentDto> enrollments = enrollmentService.getMyEnrollments(userId, pageable);
+            return ResponseEntity.ok(enrollments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Get active enrollments
+     */
+    @GetMapping("/active")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getActiveEnrollments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Long userId = extractUserIdFromAuth();
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "lastAccessedDate"));
+            Page<EnrollmentDto> enrollments = enrollmentService.getActiveEnrollments(userId, pageable);
+            return ResponseEntity.ok(enrollments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Get completed enrollments
+     */
+    @GetMapping("/completed")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getCompletedEnrollments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Long userId = extractUserIdFromAuth();
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "completionDate"));
+            Page<EnrollmentDto> enrollments = enrollmentService.getCompletedEnrollments(userId, pageable);
+            return ResponseEntity.ok(enrollments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Enroll in a course
+     */
+    @PostMapping("/enroll/{courseId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> enrollInCourse(@PathVariable Long courseId) {
+        try {
+            Long userId = extractUserIdFromAuth();
+            EnrollmentDto enrollment = enrollmentService.enrollUserInCourse(userId, courseId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(enrollment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Check if user is enrolled in course
+     */
+    @GetMapping("/check/{courseId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> isEnrolled(@PathVariable Long courseId) {
+        try {
+            Long userId = extractUserIdFromAuth();
+            Boolean enrolled = enrollmentService.isUserEnrolled(userId, courseId);
+            return ResponseEntity.ok(new HashMap<String, Object>() {{
+                put("enrolled", enrolled);
+                put("courseId", courseId);
+            }});
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Get enrollment by ID
+     */
+    @GetMapping("/{enrollmentId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getEnrollmentById(@PathVariable Long enrollmentId) {
+        try {
+            EnrollmentDto enrollment = enrollmentService.getEnrollmentById(enrollmentId);
+            return ResponseEntity.ok(enrollment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Update progress
+     */
+    @PutMapping("/{enrollmentId}/progress")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateProgress(
+            @PathVariable Long enrollmentId,
+            @RequestParam Float progressPercentage) {
+        try {
+            EnrollmentDto enrollment = enrollmentService.updateProgress(enrollmentId, progressPercentage);
+            return ResponseEntity.ok(enrollment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Complete course
+     */
+    @PutMapping("/{enrollmentId}/complete")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> completeCourse(@PathVariable Long enrollmentId) {
+        try {
+            EnrollmentDto enrollment = enrollmentService.completeEnrollment(enrollmentId);
+            return ResponseEntity.ok(enrollment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Unenroll from course
+     */
+    @DeleteMapping("/{courseId}/unenroll")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> unenrollFromCourse(@PathVariable Long courseId) {
+        try {
+            Long userId = extractUserIdFromAuth();
+            enrollmentService.unenrollUserFromCourse(userId, courseId);
+            return ResponseEntity.ok(new HashMap<String, String>() {{
+                put("message", "Successfully unenrolled from course");
+            }});
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Get course enrollments (Admin/Instructor)
+     */
+    @GetMapping("/course/{courseId}")
+    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'ADMIN')")
+    public ResponseEntity<?> getCourseEnrollments(
+            @PathVariable Long courseId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<EnrollmentDto> enrollments = enrollmentService.getCourseEnrollments(courseId, pageable);
+            return ResponseEntity.ok(enrollments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+    
+    /**
+     * Extract user ID from authentication context
+     */
+    private Long extractUserIdFromAuth() throws Exception {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new Exception("User not authenticated");
+        }
+        
+        // Assuming user ID is stored in principal with some identifier
+        // This will need to be adapted based on your JWT token structure
+        try {
+            return Long.parseLong(auth.getName()); // Or extract from claims if available
+        } catch (Exception e) {
+            throw new Exception("Unable to extract user ID from authentication");
+        }
+    }
+}

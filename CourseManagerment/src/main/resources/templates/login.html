@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Course Manager</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+        }
+        
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-3xl) var(--spacing-xl);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .auth-logo {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+            line-height: 1;
+        }
+        
+        .auth-header h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+        
+        .auth-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: var(--spacing-sm);
+            display: none;
+        }
+        
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+            font-size: 0.9rem;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .remember-me input {
+            width: auto;
+            margin: 0;
+        }
+        
+        .forgot-password {
+            color: var(--accent-primary);
+            transition: all var(--transition-fast);
+        }
+        
+        .forgot-password:hover {
+            color: var(--accent-secondary);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin: var(--spacing-xl) 0;
+            color: var(--text-tertiary);
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+        
+        .oauth-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .oauth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .oauth-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+        
+        .auth-footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .auth-footer a {
+            color: var(--accent-primary);
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+        
+        .auth-footer a:hover {
+            color: var(--accent-secondary);
+        }
+        
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: var(--spacing-2xl) var(--spacing-lg);
+            }
+            
+            .auth-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .oauth-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+    
+    <!-- Login Page -->
+    <div class="auth-page">
+        <div class="auth-container">
+            <!-- Auth Header -->
+            <div class="auth-header">
+                <div class="auth-logo">🎓</div>
+                <h1>Welcome Back</h1>
+                <p>Sign in to your account to continue learning</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" method="POST" th:action="@{/api/auth/login}">
+                <!-- Email/Username -->
+                <div class="form-group">
+                    <label for="username">Email or Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your email or username" required>
+                    <div class="error-message">Invalid email or username format</div>
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <div class="error-message">Password is required</div>
+                </div>
+                
+                <!-- Form Options -->
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="/forgot-password" class="forgot-password">Forgot password?</a>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn">Sign In</button>
+            </form>
+            
+            <!-- OAuth Buttons -->
+            <div class="oauth-buttons">
+                <button class="oauth-btn" title="Sign in with Google">
+                    <span>🔎</span>
+                    <span>Google</span>
+                </button>
+                <button class="oauth-btn" title="Sign in with GitHub">
+                    <span>⚙️</span>
+                    <span>GitHub</span>
+                </button>
+            </div>
+            
+            <!-- Divider -->
+            <div class="divider">or</div>
+            
+            <!-- Sign Up Link -->
+            <div class="auth-footer">
+                Don't have an account? <a href="/register">Sign up</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    
+    <script>
+        feather.replace();
+        
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Clear navbr to show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Signing in...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('Response parse error:', parseError);
+                    console.error('Response status:', response.status);
+                    console.error('Response text:', await response.text());
+                    alert('Server error: Invalid response format');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+                
+                if (response.ok && data.token) {
+                    // Save auth token and user info to localStorage via AuthManager
+                    const userInfo = {
+                        username: data.user?.username || username,
+                        email: data.user?.email,
+                        fullName: data.user?.fullName,
+                        role: data.user?.role || 'STUDENT'
+                    };
+                    
+                    console.log('Login successful, saving auth:', {token: data.token, user: userInfo});
+                    AuthManager.saveAuth(data.token, userInfo);
+                    
+                    // Redirect to my courses or home
+                    setTimeout(() => {
+                        window.location.href = '/my-courses';
+                    }, 500);
+                } else {
+                    const errorMsg = data.message || 'Login failed';
+                    console.error('Login failed:', errorMsg, data);
+                    alert(errorMsg);
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('An error occurred during login: ' + error.message);
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

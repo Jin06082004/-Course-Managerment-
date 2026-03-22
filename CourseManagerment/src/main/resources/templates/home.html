@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Course Manager</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1 class="hero-title">Learn Programming <span class="highlight">the Smart Way</span></h1>
+                    <p class="hero-subtitle">Master coding skills through hands-on projects, live classes, and expert guidance. Start your journey with us today.</p>
+                    
+                    <div class="hero-actions">
+                        <a href="/courses" class="btn btn-primary btn-lg">
+                            <span>Explore Courses</span>
+                            <i data-feather="arrow-right"></i>
+                        </a>
+                        <a href="#" class="btn btn-secondary btn-lg">
+                            <i data-feather="play-circle"></i>
+                            <span>Watch Demo</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">50K+</span>
+                            <span class="stat-label">Active Students</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">200+</span>
+                            <span class="stat-label">Expert Instructors</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">1000+</span>
+                            <span class="stat-label">Courses Available</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hero Illustration -->
+                <div class="hero-image">
+                    <div class="hero-visual">
+                        <div class="shape shape-1"></div>
+                        <div class="shape shape-2"></div>
+                        <div class="shape shape-3"></div>
+                        <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=500&fit=crop" alt="Learning Illustration" class="hero-img">
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Featured Courses Section -->
+        <section class="courses-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Featured Courses</h2>
+                    <p>Handpicked courses for you to start learning</p>
+                    <a href="/courses" class="view-all-link">
+                        <span>View All Courses</span>
+                        <i data-feather="arrow-right"></i>
+                    </a>
+                </div>
+                
+                <!-- Courses Grid -->
+                <div class="courses-grid">
+                    
+                    <!-- Course Card 1 -->
+                    <div class="course-card">
+                        <div class="card-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop" alt="Course Thumbnail" class="card-image">
+                            <div class="card-overlay">
+                                <a href="/courses/1" class="card-view-btn">View Course</a>
+                            </div>
+                            <span class="course-badge">Beginner</span>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="course-title">Complete JavaScript Bootcamp</h3>
+                            <p class="instructor-name">By John Smith</p>
+                            <div class="course-meta">
+                                <span class="rating">
+                                    <i data-feather="star" class="star-icon"></i>
+                                    4.8 (320)
+                                </span>
+                                <span class="duration">20 hours</span>
+                            </div>
+                            <div class="card-footer">
+                                <span class="price">$49.99</span>
+                                <button class="btn btn-icon" title="Add to Wishlist">
+                                    <i data-feather="heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Card 2 -->
+                    <div class="course-card">
+                        <div class="card-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=225&fit=crop" alt="Course Thumbnail" class="card-image">
+                            <div class="card-overlay">
+                                <a href="/courses/2" class="card-view-btn">View Course</a>
+                            </div>
+                            <span class="course-badge">Advanced</span>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="course-title">React.js Advanced Patterns</h3>
+                            <p class="instructor-name">By Sarah Johnson</p>
+                            <div class="course-meta">
+                                <span class="rating">
+                                    <i data-feather="star" class="star-icon"></i>
+                                    4.9 (521)
+                                </span>
+                                <span class="duration">25 hours</span>
+                            </div>
+                            <div class="card-footer">
+                                <span class="price">$59.99</span>
+                                <button class="btn btn-icon" title="Add to Wishlist">
+                                    <i data-feather="heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Card 3 -->
+                    <div class="course-card">
+                        <div class="card-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=225&fit=crop" alt="Course Thumbnail" class="card-image">
+                            <div class="card-overlay">
+                                <a href="/courses/3" class="card-view-btn">View Course</a>
+                            </div>
+                            <span class="course-badge">Intermediate</span>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="course-title">Python Data Science Masterclass</h3>
+                            <p class="instructor-name">By Mike Chen</p>
+                            <div class="course-meta">
+                                <span class="rating">
+                                    <i data-feather="star" class="star-icon"></i>
+                                    4.7 (412)
+                                </span>
+                                <span class="duration">30 hours</span>
+                            </div>
+                            <div class="card-footer">
+                                <span class="price">$69.99</span>
+                                <button class="btn btn-icon" title="Add to Wishlist">
+                                    <i data-feather="heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Card 4 -->
+                    <div class="course-card">
+                        <div class="card-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=225&fit=crop" alt="Course Thumbnail" class="card-image">
+                            <div class="card-overlay">
+                                <a href="/courses/4" class="card-view-btn">View Course</a>
+                            </div>
+                            <span class="course-badge">Beginner</span>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="course-title">Web Design with Figma</h3>
+                            <p class="instructor-name">By Emma Wilson</p>
+                            <div class="course-meta">
+                                <span class="rating">
+                                    <i data-feather="star" class="star-icon"></i>
+                                    4.6 (289)
+                                </span>
+                                <span class="duration">15 hours</span>
+                            </div>
+                            <div class="card-footer">
+                                <span class="price">$39.99</span>
+                                <button class="btn btn-icon" title="Add to Wishlist">
+                                    <i data-feather="heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        
+        <!-- Categories Section -->
+        <section class="categories-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Explore by Category</h2>
+                    <p>Find courses in your field of interest</p>
+                </div>
+                
+                <div class="categories-grid">
+                    <a href="/courses?category=web" class="category-card">
+                        <div class="category-icon">💻</div>
+                        <h3>Web Development</h3>
+                        <p>HTML, CSS, JavaScript, React, Vue</p>
+                    </a>
+                    
+                    <a href="/courses?category=mobile" class="category-card">
+                        <div class="category-icon">📱</div>
+                        <h3>Mobile Development</h3>
+                        <p>React Native, Flutter, iOS, Android</p>
+                    </a>
+                    
+                    <a href="/courses?category=backend" class="category-card">
+                        <div class="category-icon">⚙️</div>
+                        <h3>Backend Development</h3>
+                        <p>Node.js, Java, Python, Databases</p>
+                    </a>
+                    
+                    <a href="/courses?category=design" class="category-card">
+                        <div class="category-icon">🎨</div>
+                        <h3>UI/UX Design</h3>
+                        <p>Figma, Adobe XD, Design Systems</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features / Why Us Section -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Why Choose CourseManager?</h2>
+                    <p>Everything you need for your learning journey</p>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Expert Instructors</h3>
+                        <p>Learn from industry professionals with years of real-world experience</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3>Hands-on Projects</h3>
+                        <p>Apply your knowledge with real-world projects and assignments</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Lifetime Access</h3>
+                        <p>Access course materials forever with one-time payment</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>Community Support</h3>
+                        <p>Connect with learners and get help from instructors and peers</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🏆</div>
+                        <h3>Certifications</h3>
+                        <p>Earn recognized certificates upon course completion</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>24/7 Support</h3>
+                        <p>Get help anytime with our dedicated support team</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Call-to-Action Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to level up your skills?</h2>
+                    <p>Join thousands of developers learning with CourseManager. Start for free today!</p>
+                    <div class="cta-buttons">
+                        <a href="/courses" class="btn btn-primary btn-lg">
+                            <span>Browse Courses</span>
+                            <i data-feather="arrow-right"></i>
+                        </a>
+                        <a href="#" class="btn btn-secondary btn-lg">
+                            <span>View Pricing</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Course Manager</h3>
+                    <p>Learn programming the smart way. Join thousands of students learning with us.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon" title="Twitter">
+                            <i data-feather="twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon" title="Facebook">
+                            <i data-feather="facebook"></i>
+                        </a>
+                        <a href="#" class="social-icon" title="LinkedIn">
+                            <i data-feather="linkedin"></i>
+                        </a>
+                        <a href="#" class="social-icon" title="GitHub">
+                            <i data-feather="github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/courses">Courses</a></li>
+                        <li><a href="/my-courses">My Learning</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Feedback</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Disclaimer</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Course Manager. All rights reserved.</p>
+                <p>Built with <span class="heart">❤️</span> by developers, for developers.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+    
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

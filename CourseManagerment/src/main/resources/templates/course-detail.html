@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Detail | Course Manager</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    
+    <style>
+        .course-detail-page {
+            padding: var(--spacing-xl) var(--spacing-lg);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+            min-height: 100vh;
+        }
+        
+        .course-detail-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: var(--spacing-2xl);
+        }
+        
+        /* Course Hero */
+        .course-hero {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: var(--spacing-2xl);
+            box-shadow: var(--shadow);
+        }
+        
+        .course-thumbnail {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            background: var(--bg-hover);
+        }
+        
+        .course-header {
+            padding: var(--spacing-xl);
+        }
+        
+        .course-header h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+        
+        .course-meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-xl);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            color: var(--text-secondary);
+        }
+        
+        .meta-item strong {
+            color: var(--text-primary);
+        }
+        
+        /* Course Description */
+        .course-description {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-2xl);
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .course-description h3 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            font-weight: 700;
+        }
+        
+        .course-description ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md) var(--spacing-xl);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .course-description li {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .course-description li::before {
+            content: '✓';
+            color: var(--accent-primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        /* Lessons Accordion */
+        .lessons-section {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .lessons-header {
+            padding: var(--spacing-xl);
+            background: var(--bg-hover);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .lessons-header h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .lesson-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+        
+        .lesson-header {
+            padding: var(--spacing-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+        }
+        
+        .lesson-header:hover {
+            background: var(--bg-hover);
+            color: var(--accent-primary);
+        }
+        
+        .lesson-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .lesson-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        
+        .lesson-details {
+            flex: 1;
+        }
+        
+        .lesson-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .lesson-duration {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+        
+        .lesson-toggle {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--transition-fast);
+        }
+        
+        .lesson-item.active .lesson-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .lesson-content {
+            padding: 0 var(--spacing-lg);
+            max-height: 0;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+            border-left: 3px solid var(--border-color);
+            margin: 0 var(--spacing-lg);
+        }
+        
+        .lesson-item.active .lesson-content {
+            padding: var(--spacing-lg) var(--spacing-lg);
+            max-height: 300px;
+            border-left-color: var(--accent-primary);
+        }
+        
+        .lesson-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+        }
+        
+        /* Sidebar - Course Info */
+        .course-sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        
+        .course-card-info {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow);
+        }
+        
+        .price-section {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-xl);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            margin-bottom: var(--spacing-sm);
+            line-height: 1;
+        }
+        
+        .price-label {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+        
+        .enroll-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .enroll-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+        
+        .course-info-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .info-item i {
+            color: var(--accent-primary);
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        
+        .instructor-info {
+            background: var(--bg-hover);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-top: var(--spacing-xl);
+            text-align: center;
+        }
+        
+        .instructor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto var(--spacing-md);
+            border: 2px solid var(--border-color);
+        }
+        
+        .instructor-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .instructor-title {
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .course-detail-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .course-sidebar {
+                position: relative;
+                top: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .course-thumbnail {
+                height: 250px;
+            }
+            
+            .course-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .course-description ul {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+    
+    <!-- Course Detail Page -->
+    <div class="course-detail-page">
+        <div class="course-detail-container">
+            <!-- Main Content -->
+            <div>
+                <!-- Course Hero -->
+                <div class="course-hero">
+                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop" alt="Course Thumbnail" class="course-thumbnail">
+                    <div class="course-header">
+                        <h1>Complete JavaScript Bootcamp 2024</h1>
+                        <div class="course-meta-info">
+                            <div class="meta-item">
+                                <i data-feather="star"></i>
+                                <strong>4.8</strong> (320 reviews)
+                            </div>
+                            <div class="meta-item">
+                                <i data-feather="users"></i>
+                                <strong>5,230</strong> students
+                            </div>
+                            <div class="meta-item">
+                                <i data-feather="clock"></i>
+                                <strong>20</strong> hours
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Course Description -->
+                <div class="course-description">
+                    <h3>About this course</h3>
+                    <p>Learn JavaScript from the ground up with this comprehensive bootcamp. Starting from the basics, you'll master ES6+ features, asynchronous programming, and modern JavaScript practices. Perfect for beginners and intermediate developers looking to strengthen their JavaScript skills.</p>
+                    
+                    <h3 style="margin-top: var(--spacing-xl);">What you'll learn</h3>
+                    <ul>
+                        <li>JavaScript fundamentals</li>
+                        <li>DOM manipulation & events</li>
+                        <li>Asynchronous programming</li>
+                        <li>ES6+ features</li>
+                        <li>API integration</li>
+                        <li>Error handling</li>
+                        <li>Debugging techniques</li>
+                        <li>Best practices</li>
+                    </ul>
+                    
+                    <h3 style="margin-top: var(--spacing-xl);">Requirements</h3>
+                    <p>Basic HTML & CSS knowledge recommended but not required. A text editor (VS Code) and modern web browser.</p>
+                </div>
+                
+                <!-- Lessons Accordion -->
+                <div class="lessons-section">
+                    <div class="lessons-header">
+                        <h3><i data-feather="book" style="display: inline-block; margin-right: var(--spacing-md); color: var(--accent-primary);"></i> Course Content</h3>
+                    </div>
+                    
+                    <!-- Lesson 1 -->
+                    <div class="lesson-item active">
+                        <div class="lesson-header" onclick="toggleLesson(this)">
+                            <div class="lesson-info">
+                                <i data-feather="play-circle" class="lesson-icon"></i>
+                                <div class="lesson-details">
+                                    <div class="lesson-title">Module 1: JavaScript Basics</div>
+                                    <div class="lesson-duration">6 lessons • 2 hours</div>
+                                </div>
+                            </div>
+                            <div class="lesson-toggle">
+                                <i data-feather="chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="lesson-content">
+                            <div class="lesson-desc">
+                                <strong>Lesson 1.1:</strong> What is JavaScript? - Introduction to JavaScript, how it works, and its applications.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 1.2:</strong> Variables & Data Types - Understanding var, let, const, and primitive data types.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 1.3:</strong> Operators & Expressions - Arithmetic, logical, comparison operators.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lesson 2 -->
+                    <div class="lesson-item">
+                        <div class="lesson-header" onclick="toggleLesson(this)">
+                            <div class="lesson-info">
+                                <i data-feather="play-circle" class="lesson-icon"></i>
+                                <div class="lesson-details">
+                                    <div class="lesson-title">Module 2: Functions & Scope</div>
+                                    <div class="lesson-duration">5 lessons • 1.5 hours</div>
+                                </div>
+                            </div>
+                            <div class="lesson-toggle">
+                                <i data-feather="chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="lesson-content">
+                            <div class="lesson-desc">
+                                <strong>Lesson 2.1:</strong> Function Declarations - Creating and invoking functions.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 2.2:</strong> Arrow Functions - Modern syntax and benefits.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 2.3:</strong> Scope & Closures - Understanding function scope and closures.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lesson 3 -->
+                    <div class="lesson-item">
+                        <div class="lesson-header" onclick="toggleLesson(this)">
+                            <div class="lesson-info">
+                                <i data-feather="play-circle" class="lesson-icon"></i>
+                                <div class="lesson-details">
+                                    <div class="lesson-title">Module 3: DOM Manipulation</div>
+                                    <div class="lesson-duration">7 lessons • 3 hours</div>
+                                </div>
+                            </div>
+                            <div class="lesson-toggle">
+                                <i data-feather="chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="lesson-content">
+                            <div class="lesson-desc">
+                                <strong>Lesson 3.1:</strong> Selecting Elements - querySelector, getElementById, etc.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 3.2:</strong> Modifying Content - Changing HTML and CSS dynamically.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 3.3:</strong> Event Listeners - Handling user interactions.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lesson 4 -->
+                    <div class="lesson-item">
+                        <div class="lesson-header" onclick="toggleLesson(this)">
+                            <div class="lesson-info">
+                                <i data-feather="play-circle" class="lesson-icon"></i>
+                                <div class="lesson-details">
+                                    <div class="lesson-title">Module 4: Asynchronous JavaScript</div>
+                                    <div class="lesson-duration">6 lessons • 3 hours</div>
+                                </div>
+                            </div>
+                            <div class="lesson-toggle">
+                                <i data-feather="chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="lesson-content">
+                            <div class="lesson-desc">
+                                <strong>Lesson 4.1:</strong> Promises - Understanding promises and their states.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 4.2:</strong> Async/Await - Modern async patterns.
+                            </div>
+                            <div class="lesson-desc">
+                                <strong>Lesson 4.3:</strong> Fetch API - Making HTTP requests.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <aside class="course-sidebar">
+                <div class="course-card-info">
+                    <!-- Price -->
+                    <div class="price-section">
+                        <div class="price-tag">$49.99</div>
+                        <div class="price-label">One-time payment</div>
+                    </div>
+                    
+                    <!-- Enroll Button -->
+                    <button class="enroll-btn" onclick="enrollCourse()">
+                        Enroll Now
+                    </button>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: var(--spacing-lg);">
+                        <i data-feather="heart" style="width: 16px; height: 16px;"></i>
+                        Add to Wishlist
+                    </button>
+                    
+                    <!-- Course Info -->
+                    <ul class="course-info-list">
+                        <li class="info-item">
+                            <i data-feather="book"></i>
+                            <span>20 Hours of content</span>
+                        </li>
+                        <li class="info-item">
+                            <i data-feather="video"></i>
+                            <span>80+ Video lessons</span>
+                        </li>
+                        <li class="info-item">
+                            <i data-feather="download"></i>
+                            <span>Downloadable resources</span>
+                        </li>
+                        <li class="info-item">
+                            <i data-feather="award"></i>
+                            <span>Certificate of completion</span>
+                        </li>
+                        <li class="info-item">
+                            <i data-feather="smartphone"></i>
+                            <span>Mobile friendly</span>
+                        </li>
+                        <li class="info-item">
+                            <i data-feather="lock"></i>
+                            <span>Lifetime access</span>
+                        </li>
+                    </ul>
+                    
+                    <!-- Instructor -->
+                    <div class="instructor-info">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=john" alt="Instructor" class="instructor-avatar">
+                        <div class="instructor-name">John Smith</div>
+                        <div class="instructor-title">JavaScript Expert</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Course Manager</h3>
+                    <p>Learn programming the smart way.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/courses">Courses</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+    
+    <script>
+        feather.replace();
+        
+        function toggleLesson(header) {
+            const lessonItem = header.parentElement;
+            lessonItem.classList.toggle('active');
+        }
+        
+        async function enrollCourse() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = '/login?redirect=/courses/1';
+                return;
+            }
+            
+            try {
+                const courseId = 1; // TODO: Get from URL or data attribute
+                const response = await fetch(`/api/enrollments/enroll/${courseId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✅ Successfully enrolled in the course!');
+                    // Redirect to my courses
+                    setTimeout(() => {
+                        window.location.href = '/my-courses';
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    alert('❌ Error: ' + (error.error || 'Failed to enroll'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error enrolling in course');
+            }
+        }
+    </script>
+</body>
+</html>

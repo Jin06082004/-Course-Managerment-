@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Course Manager</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+        }
+        
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-3xl) var(--spacing-xl);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .auth-logo {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+            line-height: 1;
+        }
+        
+        .auth-header h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+        
+        .auth-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: var(--spacing-sm);
+            display: none;
+        }
+        
+        .password-strength {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+        
+        .strength-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: var(--spacing-sm);
+            height: 4px;
+        }
+        
+        .strength-segment {
+            flex: 1;
+            background: var(--border-color);
+            border-radius: 2px;
+            transition: background var(--transition-fast);
+        }
+        
+        .strength-segment.active {
+            background: var(--accent-primary);
+        }
+        
+        .terms-agreement {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .terms-agreement input {
+            width: auto;
+            margin-right: var(--spacing-sm);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+            color: var(--text-tertiary);
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+        
+        .oauth-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .oauth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .oauth-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+        
+        .auth-footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .auth-footer a {
+            color: var(--accent-primary);
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+        
+        .auth-footer a:hover {
+            color: var(--accent-secondary);
+        }
+        
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: var(--spacing-2xl) var(--spacing-lg);
+            }
+            
+            .auth-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .oauth-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+    
+    <!-- Register Page -->
+    <div class="auth-page">
+        <div class="auth-container">
+            <!-- Auth Header -->
+            <div class="auth-header">
+                <div class="auth-logo">🎓</div>
+                <h1>Get Started</h1>
+                <p>Create your account to start learning</p>
+            </div>
+            
+            <!-- Register Form -->
+            <form id="registerForm" method="POST" th:action="@{/api/auth/register}">
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
+                    <div class="error-message">Full name is required (2-200 characters)</div>
+                </div>
+                
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required>
+                    <div class="error-message">Username must be 3-100 characters</div>
+                </div>
+                
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    <div class="error-message">Please enter a valid email address</div>
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+                    <div class="error-message">Password must be at least 6 characters</div>
+                    
+                    <!-- Password Strength -->
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-segment" id="strength-1"></div>
+                            <div class="strength-segment" id="strength-2"></div>
+                            <div class="strength-segment" id="strength-3"></div>
+                        </div>
+                        <span id="strengthText">Password strength: Weak</span>
+                    </div>
+                </div>
+                
+                <!-- Terms & Conditions -->
+                <div class="terms-agreement">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms" style="margin: 0; display: inline;">
+                        I agree to the <a href="#" style="color: var(--accent-primary);">Terms of Service</a> and <a href="#" style="color: var(--accent-primary);">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" id="submitBtn">Create Account</button>
+            </form>
+            
+            <!-- OAuth Buttons -->
+            <div class="oauth-buttons">
+                <button type="button" class="oauth-btn" title="Sign up with Google">
+                    <span>🔎</span>
+                    <span>Google</span>
+                </button>
+                <button type="button" class="oauth-btn" title="Sign up with GitHub">
+                    <span>⚙️</span>
+                    <span>GitHub</span>
+                </button>
+            </div>
+            
+            <!-- Divider -->
+            <div class="divider">or</div>
+            
+            <!-- Login Link -->
+            <div class="auth-footer">
+                Already have an account? <a href="/login">Sign in</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    
+    <script>
+        feather.replace();
+        
+        // Password strength indicator
+        const passwordInput = document.getElementById('password');
+        const strengthSegments = [
+            document.getElementById('strength-1'),
+            document.getElementById('strength-2'),
+            document.getElementById('strength-3')
+        ];
+        const strengthText = document.getElementById('strengthText');
+        
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            let strength = 0;
+            
+            // Check length
+            if (password.length >= 6) strength++;
+            if (password.length >= 12) strength++;
+            
+            // Check for mixed case and numbers
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[!@#$%^&*]/.test(password)) strength++;
+            
+            // Update UI
+            strengthSegments.forEach((seg, idx) => {
+                if (idx < Math.min(strength, 3)) {
+                    seg.classList.add('active');
+                } else {
+                    seg.classList.remove('active');
+                }
+            });
+            
+            const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+            strengthText.textContent = `Password strength: ${strengthLabels[Math.min(strength, 4)]}`;
+        });
+        
+        // Handle register form submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+            
+            const fullName = document.getElementById('fullName').value;
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fullName: fullName,
+                        username: username,
+                        email: email,
+                        password: password,
+                        role: 'STUDENT'
+                    })
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('Response parse error:', parseError);
+                    console.error('Response status:', response.status);
+                    alert('Server error: Invalid response format');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    return;
+                }
+                
+                if (response.ok && data.token) {
+                    // Save auth token and user info to localStorage via AuthManager
+                    const userInfo = {
+                        username: username,
+                        email: email,
+                        fullName: fullName,
+                        role: 'STUDENT'
+                    };
+                    
+                    console.log('Registration successful, saving auth:', {token: data.token, user: userInfo});
+                    AuthManager.saveAuth(data.token, userInfo);
+                    
+                    // Show success message and redirect
+                    alert('Account created successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/my-courses';
+                    }, 500);
+                } else {
+                    const errorMsg = data.message || 'Registration failed. Please try again.';
+                    console.error('Registration failed:', errorMsg, data);
+                    alert(errorMsg);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('An error occurred during registration: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

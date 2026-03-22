@@ -1,0 +1,144 @@
+<!-- Navbar Fragment -->
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="navbar">
+    <nav class="navbar">
+        <!-- Navbar Container -->
+        <div class="navbar-container">
+            <!-- Logo Section -->
+            <div class="navbar-logo">
+                <a href="/" class="logo-link">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">CourseManager</span>
+                </a>
+            </div>
+            
+            <!-- Menu Toggle Button (Mobile) -->
+            <div class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link" data-nav-path="/">
+                        <i data-feather="home" class="nav-icon"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="/courses" class="nav-link" data-nav-path="/courses">
+                        <i data-feather="book-open" class="nav-icon"></i>
+                        <span>Courses</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="/my-courses" class="nav-link" data-nav-path="/my-courses">
+                        <i data-feather="play-circle" class="nav-icon"></i>
+                        <span>My Learning</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Right Section: Search + Auth -->
+            <div class="navbar-right">
+                <!-- Search Box (Hidden on Mobile) -->
+                <div class="search-box">
+                    <input type="text" id="navSearch" placeholder="Search courses..." class="search-input">
+                    <button class="search-btn" title="Search">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+                
+                <!-- Auth Section -->
+                <div class="auth-section">
+                    <!-- Not Authenticated (shown by default, hidden by JS if logged in) -->
+                    <div class="auth-not-logined">
+                        <a href="/login" class="btn-link login-btn">
+                            <i data-feather="log-in"></i>
+                            <span>Login</span>
+                        </a>
+                        <a href="/register" class="btn btn-primary">
+                            <span>Sign Up</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Authenticated User Profile Dropdown (hidden by default, shown by JS if logged in) -->
+                    <div class="auth-logged-in" style="display: none;">
+                        <div class="user-profile">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="User Avatar" class="avatar">
+                            <div class="dropdown-menu" id="profileDropdown">
+                                <div class="user-info" style="display: none;">
+                                    <span class="username"></span>
+                                    <span class="email"></span>
+                                </div>
+                                <a href="/my-courses" class="dropdown-item">
+                                    <i data-feather="book-open"></i>
+                                    <span>My Courses</span>
+                                </a>
+                                <a href="/profile" class="dropdown-item">
+                                    <i data-feather="user"></i>
+                                    <span>My Profile</span>
+                                </a>
+                                <a href="/settings" class="dropdown-item">
+                                    <i data-feather="settings"></i>
+                                    <span>Settings</span>
+                                </a>
+                                <a href="/wishlist" class="dropdown-item">
+                                    <i data-feather="heart"></i>
+                                    <span>Wishlist</span>
+                                </a>
+                                <hr>
+                                <a href="#" class="dropdown-item logout" onclick="AuthManager.handleLogout(event)">
+                                    <i data-feather="log-out"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Navigation Script -->
+    <script>
+        // Set active link based on current URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('[data-nav-path]');
+            const currentPath = window.location.pathname;
+            
+            navLinks.forEach(link => {
+                const navPath = link.getAttribute('data-nav-path');
+                
+                // For /courses path, match if it starts with /courses
+                if (navPath === '/courses' && currentPath.startsWith('/courses')) {
+                    link.classList.add('active');
+                }
+                // For exact matches like / and /my-courses
+                else if (currentPath === navPath) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                });
+            }
+            
+            // Close menu when a link is clicked
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    navMenu.classList.remove('active');
+                });
+            });
+        });
+    </script>
+</th:block>

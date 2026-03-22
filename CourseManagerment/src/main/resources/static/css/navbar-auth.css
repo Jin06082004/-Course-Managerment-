@@ -1,0 +1,108 @@
+/* User Profile Dropdown Styles */
+.user-profile {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.user-profile .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 2px solid transparent;
+}
+
+.user-profile .avatar:hover {
+    border-color: var(--accent-primary);
+    transform: scale(1.05);
+}
+
+.user-profile .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    min-width: 220px;
+    margin-top: var(--spacing-md);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-fast);
+    z-index: 1000;
+    padding: var(--spacing-md) 0;
+}
+
+.user-profile .dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-menu .user-info {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.dropdown-menu .user-info .username {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.dropdown-menu .user-info .email {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.dropdown-menu hr {
+    margin: var(--spacing-sm) 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+}
+
+.dropdown-item.logout {
+    color: #ef4444;
+}
+
+.dropdown-item.logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.dropdown-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Close dropdown when clicking outside */
+.dropdown-menu:not(.active) {
+    pointer-events: none;
+}
+
+.dropdown-menu.active {
+    pointer-events: auto;
+}

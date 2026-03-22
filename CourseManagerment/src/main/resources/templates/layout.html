@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:block="${title != null ? title + ' | Course Manager' : 'Course Manager'}"></title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff6b35'>🎓</text></svg>">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar-auth.css}">
+    
+    <!-- Google Fonts: Poppins, Inter, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    
+    <!-- Additional CSS Block for Page-Specific Styles -->
+    <th:block th:block="${extraCss}"></th:block>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+    
+    <!-- Main Content -->
+    <main class="main-content" th:block="${content}">
+        <!-- Content will be injected here by child templates -->
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Course Manager</h3>
+                    <p>Learn programming the smart way. Join thousands of students learning with us.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon" title="Twitter">
+                            <i data-feather="twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon" title="Facebook">
+                            <i data-feather="facebook"></i>
+                        </a>
+                        <a href="#" class="social-icon" title="LinkedIn">
+                            <i data-feather="linkedin"></i>
+                        </a>
+                        <a href="#" class="social-icon" title="GitHub">
+                            <i data-feather="github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/courses">Courses</a></li>
+                        <li><a href="/my-courses">My Learning</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Feedback</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Disclaimer</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Course Manager. All rights reserved.</p>
+                <p>Built with <span class="heart">❤️</span> by developers, for developers.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    
+    <!-- Execute Feather Icons Initialization -->
+    <script>
+        feather.replace();
+    </script>
+    
+    <!-- Additional Script Block for Page-Specific Scripts -->
+    <th:block th:block="${extraScript}"></th:block>
+</body>
+</html>
