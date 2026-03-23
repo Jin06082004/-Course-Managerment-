@@ -1,10 +1,14 @@
 package com._6.CourseManagerment.repository;
 
 import com._6.CourseManagerment.entity.User;
+import com._6.CourseManagerment.entity.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * User Repository - Handles database operations for User entity
@@ -36,4 +40,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Check if email exists
      */
     boolean existsByEmail(String email);
+    
+    /**
+     * Find users by roles with pagination
+     */
+    Page<User> findByRoles(Set<Role> roles, Pageable pageable);
+    
+    /**
+     * Count users by roles
+     */
+    long countByRoles(Set<Role> roles);
 }

@@ -1,0 +1,23 @@
+{
+  "groups": [
+    {
+      "name": "jwt",
+      "type": "com._6.CourseManagerment.config.JwtProperties",
+      "description": "JWT configuration properties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret key for JWT token signing. Must be at least 512 bits length for HS512 algorithm security.",
+      "defaultValue": "your_jwt_secret_key_minimum_512_bits_length_for_hs512_algorithm_security_must_be_at_least_64_characters_long_to_work_properly_with_the_java_jwt_library"
+    },
+    {
+      "name": "jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "JWT token expiration time in milliseconds",
+      "defaultValue": 86400000
+    }
+  ]
+}

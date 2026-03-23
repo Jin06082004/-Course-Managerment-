@@ -1,6 +1,7 @@
 package com._6.CourseManagerment.repository;
 
 import com._6.CourseManagerment.entity.Course;
+import com._6.CourseManagerment.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +23,12 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     
     // Find by instructor
     Page<Course> findByInstructor_Id(Long instructorId, Pageable pageable);
+    
+    // Find by instructor (User entity) with pagination
+    Page<Course> findByInstructor(User instructor, Pageable pageable);
+    
+    // Find by instructor (User entity) without pagination
+    List<Course> findByInstructor(User instructor);
     
     // Find by level
     Page<Course> findByLevel(String level, Pageable pageable);

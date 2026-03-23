@@ -501,10 +501,8 @@
             document.getElementById('infoFullName').className = profile.fullName ? 'info-value' : 'info-value empty';
 
             // Basic info
-            document.getElementById('displayUsername').textContent = profile.username || '—';
             document.getElementById('infoUsername').textContent = profile.username || '—';
 
-            document.getElementById('displayEmail').textContent = profile.email || '—';
             document.getElementById('infoEmail').textContent = profile.email || '—';
 
             // Role
@@ -620,7 +618,7 @@
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const avatarUrl = e.target.result;
                 document.getElementById('profileAvatar').src = avatarUrl;
 

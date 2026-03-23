@@ -90,6 +90,51 @@
                                     <i data-feather="heart"></i>
                                     <span>Wishlist</span>
                                 </a>
+                                
+                                <!-- Instructor Menu Items -->
+                                <div id="instructorMenuSection" style="display: none;">
+                                    <hr>
+                                    <div style="padding: 8px 16px; font-size: 12px; color: #999; text-transform: uppercase;">Instructor</div>
+                                    <a href="/instructor" class="dropdown-item">
+                                        <i data-feather="briefcase"></i>
+                                        <span>Instructor Dashboard</span>
+                                    </a>
+                                    <a href="/instructor/courses" class="dropdown-item">
+                                        <i data-feather="layers"></i>
+                                        <span>My Courses</span>
+                                    </a>
+                                    <a href="/instructor/courses/new" class="dropdown-item">
+                                        <i data-feather="plus-circle"></i>
+                                        <span>Create Course</span>
+                                    </a>
+                                    <a href="/instructor/statistics" class="dropdown-item">
+                                        <i data-feather="bar-chart-2"></i>
+                                        <span>Statistics</span>
+                                    </a>
+                                </div>
+                                
+                                <!-- Admin Menu Items -->
+                                <div id="adminMenuSection" style="display: none;">
+                                    <hr>
+                                    <div style="padding: 8px 16px; font-size: 12px; color: #999; text-transform: uppercase;">Admin</div>
+                                    <a href="/admin" class="dropdown-item">
+                                        <i data-feather="shield"></i>
+                                        <span>Admin Dashboard</span>
+                                    </a>
+                                    <a href="/admin/users" class="dropdown-item">
+                                        <i data-feather="users"></i>
+                                        <span>User Management</span>
+                                    </a>
+                                    <a href="/admin/courses" class="dropdown-item">
+                                        <i data-feather="book"></i>
+                                        <span>Course Moderation</span>
+                                    </a>
+                                    <a href="/admin/statistics" class="dropdown-item">
+                                        <i data-feather="bar-chart-2"></i>
+                                        <span>Statistics</span>
+                                    </a>
+                                </div>
+                                
                                 <hr>
                                 <a href="#" class="dropdown-item logout" onclick="window.AuthManager.handleLogout(event)">
                                     <i data-feather="log-out"></i>
@@ -139,6 +184,46 @@
                     navMenu.classList.remove('active');
                 });
             });
+            
+            // Show/hide role-based menu items
+            function updateRoleMenuItems() {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                
+                // Decode JWT token to get user roles
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const roles = payload.roles || [];
+                    
+                    const instructorSection = document.getElementById('instructorMenuSection');
+                    const adminSection = document.getElementById('adminMenuSection');
+                    
+                    // Show instructor menu if user has INSTRUCTOR or ADMIN role
+                    if (roles.includes('ROLE_INSTRUCTOR') || roles.includes('ROLE_ADMIN')) {
+                        instructorSection.style.display = 'block';
+                    }
+                    
+                    // Show admin menu if user has ADMIN role
+                    if (roles.includes('ROLE_ADMIN')) {
+                        adminSection.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error parsing token:', error);
+                }
+            }
+            
+            // Update role menu items on load and when dropdown is opened
+            updateRoleMenuItems();
+            
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (profileDropdown) {
+                const userProfile = profileDropdown.closest('.user-profile');
+                if (userProfile) {
+                    userProfile.addEventListener('click', function() {
+                        setTimeout(updateRoleMenuItems, 100);
+                    });
+                }
+            }
         });
     </script>
 </th:block>

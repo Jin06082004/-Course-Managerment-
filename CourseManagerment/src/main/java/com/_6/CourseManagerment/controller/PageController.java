@@ -1,13 +1,45 @@
 package com._6.CourseManagerment.controller;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class PageController {
+
+    /**
+     * Home page - redirects based on user role
+     */
+    @GetMapping({"/", "/home"})
+    public String home(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        
+        // Check if user is authenticated
+        if (auth != null && auth.isAuthenticated() && !auth.getAuthorities().isEmpty()) {
+            // Check user roles
+            for (GrantedAuthority authority : auth.getAuthorities()) {
+                String role = authority.getAuthority();
+                if ("ROLE_ADMIN".equals(role)) {
+                    // Admin users see admin dashboard
+                    return "redirect:/admin";
+                } else if ("ROLE_INSTRUCTOR".equals(role)) {
+                    // Instructor users see instructor dashboard
+                    return "redirect:/instructor";
+                }
+            }
+            // Default for authenticated students
+            model.addAttribute("pageTitle", "My Learning");
+            return "home";
+        }
+        
+        // Unauthenticated users see public home page
+        model.addAttribute("pageTitle", "CourseManager");
+        return "home";
+    }
 
     @GetMapping("/courses")
     public String courses() {

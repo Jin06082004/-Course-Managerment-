@@ -105,10 +105,25 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints - Auth
                 .requestMatchers("/api/auth/**").permitAll()
+                
+                // Public endpoints - Setup (initial admin role assignment)
+                .requestMatchers("/api/setup/**").permitAll()
 
                 // Public endpoints - Browsing courses
                 .requestMatchers("/api/courses/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
+                
+                // Admin endpoint - API
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Instructor endpoint - API
+                .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
+                
+                // Admin pages
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                
+                // Instructor pages
+                .requestMatchers("/instructor/**").hasRole("INSTRUCTOR")
                 
                 // Public pages (HTML từ Thymeleaf — trình duyệt KHÔNG gửi JWT trong localStorage khi gõ URL / F5)
                 // Xác thực thật sự vẫn do JWT trên /api/** khi frontend gọi fetch + Authorization

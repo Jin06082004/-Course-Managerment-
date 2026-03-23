@@ -5,7 +5,6 @@ import com._6.CourseManagerment.dto.LoginRequest;
 import com._6.CourseManagerment.dto.RegisterRequest;
 import com._6.CourseManagerment.entity.User;
 import com._6.CourseManagerment.repository.UserRepository;
-import com._6.CourseManagerment.security.JwtTokenProvider;
 import com._6.CourseManagerment.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,9 +36,6 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
