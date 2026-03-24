@@ -5,13 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instructor Settings - Instructor Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/instructor.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
 </head>
-<body>
+<body class="instructor-app">
     <div th:replace="fragments/navbar"></div>
-    <div style="margin: 50px; text-align: center;">
-        <h1>Instructor Settings</h1>
-        <p style="color: #999;">Settings page coming soon.</p>
-        <a href="/instructor" style="background: #27ae60; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; text-decoration: none;">Back to Dashboard</a>
+
+    <div class="instructor-container">
+        <nav class="instructor-sidebar">
+            <h3>Instructor Panel</h3>
+            <ul>
+                <li><a href="/instructor">Dashboard</a></li>
+                <li><a href="/instructor/courses">My Courses</a></li>
+                <li><a href="/instructor/courses/new">Create Course</a></li>
+                <li><a href="/instructor/statistics">Statistics</a></li>
+                <li><a href="/instructor/earnings">Earnings</a></li>
+                <li><a href="/instructor/settings" class="active">Settings</a></li>
+            </ul>
+        </nav>
+
+        <div class="instructor-content">
+            <header class="instructor-page-header">
+                <p class="eyebrow">Account</p>
+                <h1>Instructor settings</h1>
+            </header>
+
+            <div class="instructor-section">
+                <div class="placeholder-section">
+                    <div class="placeholder-icon">⚙️</div>
+                    <h3>Coming soon</h3>
+                    <p>Profile, payouts, and notifications will live here.</p>
+                    <p style="margin-top: 1.25rem;">
+                        <a href="/instructor" class="action-button">Back to dashboard</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

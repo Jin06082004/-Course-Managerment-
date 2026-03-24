@@ -4,24 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Admin Panel</title>
+    <!-- Feather Icons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <!-- Feather Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
     <script th:src="@{/js/auth.js}"></script>
     <script>
-        // Check if user has ADMIN role before rendering page
-        // Wait for auth.js to load completely
         function checkAdminAccess() {
             if (window.AuthManager && window.AuthManager.requireRole) {
-                if (!window.AuthManager.requireRole('ADMIN', '/login')) {
-                    return; // Will redirect
-                }
+                if (!window.AuthManager.requireRole('ADMIN', '/login')) return;
             } else {
-                // auth.js not loaded yet, retry
                 setTimeout(checkAdminAccess, 100);
             }
         }
-        
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', checkAdminAccess);
         } else {
@@ -318,7 +313,7 @@
                     window.location.href = '/login';
                     return;
                 }
-                
+
                 const headers = {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
@@ -362,15 +357,17 @@
             }
             
             users.forEach(user => {
+                const statusClass = user.status === 'ACTIVE' ? 'status-active' : 'status-locked';
+                const statusText = user.status || 'UNKNOWN';
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${user.id}</td>
-                    <td>${user.username}</td>
-                    <td>${user.email}</td>
-                    <td>${user.fullName || '-'}</td>
-                    <td>${user.role || '-'}</td>
-                    <td><span class="status-${user.status.toLowerCase()}">${user.status}</span></td>
-                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>${escapeHtml(user.username)}</td>
+                    <td>${escapeHtml(user.email)}</td>
+                    <td>${escapeHtml(user.fullName || '-')}</td>
+                    <td>${escapeHtml(user.role || '-')}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</td>
                     <td>
                         <a href="/admin/users/${user.id}" class="action-button">Edit</a>
                         <button class="action-button danger" onclick="deleteUser(${user.id})">Delete</button>
@@ -448,25 +445,22 @@
             }
         }
         
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
         // Load users on page load
         function initializeUsers() {
-            if (window.AuthManager && window.AuthManager.getToken()) {
+            if (window.AuthManager?.getToken?.()) {
                 loadUsers(0);
             } else {
-                // Wait for auth.js to load
                 setTimeout(initializeUsers, 100);
             }
         }
-        
+
         document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
             initializeUsers();
-            // Initialize feather icons
-            if (window.feather) {
-                feather.replace();
-            }
         });
     </script>
-    <!-- Feather Icons JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
-</body>
-</html>

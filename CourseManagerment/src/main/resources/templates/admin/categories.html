@@ -4,32 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Management - Admin Panel</title>
+    <!-- Feather Icons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <!-- Feather Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
     <script th:src="@{/js/auth.js}"></script>
     <script>
-        // Check if user has ADMIN role before rendering page
-        // Wait for auth.js to load completely
         function checkAdminAccess() {
             if (window.AuthManager && window.AuthManager.requireRole) {
-                if (!window.AuthManager.requireRole('ADMIN', '/login')) {
-                    return; // Will redirect
-                }
+                if (!window.AuthManager.requireRole('ADMIN', '/login')) return;
             } else {
-                // auth.js not loaded yet, retry
                 setTimeout(checkAdminAccess, 100);
             }
         }
-        
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                checkAdminAccess();
-                if (window.feather) feather.replace();
-            });
+            document.addEventListener('DOMContentLoaded', checkAdminAccess);
         } else {
             checkAdminAccess();
-            setTimeout(() => { if (window.feather) feather.replace(); }, 100);
         }
     </script>
     <style>
@@ -184,45 +175,157 @@
         </nav>
 
         <div class="admin-content">
-            <h1>📚 Category Management</h1>
+            <h1>Category Management</h1>
 
             <div class="section">
                 <h3>All Categories</h3>
                 <div class="button-group">
-                    <button onclick="alert('Add category feature coming soon')">➕ Add New Category</button>
-                    <button onclick="alert('Search feature coming soon')">🔍 Search</button>
+                    <button onclick="showAddCategoryModal()">+ Add New Category</button>
                 </div>
 
-                <div class="category-list">
-                    <div class="category-card">
-                        <h4>Web Development</h4>
-                        <small>152 courses</small>
-                    </div>
-                    <div class="category-card">
-                        <h4>Mobile Apps</h4>
-                        <small>98 courses</small>
-                    </div>
-                    <div class="category-card">
-                        <h4>Data Science</h4>
-                        <small>76 courses</small>
-                    </div>
-                    <div class="category-card">
-                        <h4>Cloud Computing</h4>
-                        <small>54 courses</small>
-                    </div>
-                    <div class="category-card">
-                        <h4>Cybersecurity</h4>
-                        <small>42 courses</small>
-                    </div>
-                    <div class="category-card">
-                        <h4>Artificial Intelligence</h4>
-                        <small>89 courses</small>
-                    </div>
-                </div>
+                <div id="categoryList" class="category-list"></div>
+                <div id="categoryLoading" style="text-align:center;padding:30px;color:#666;">Loading categories...</div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <!-- Add/Edit Category Modal -->
+    <div id="categoryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:8px;padding:30px;width:450px;max-width:90%;">
+            <h3 id="modalTitle" style="margin-top:0;">Add Category</h3>
+            <input type="hidden" id="editCategoryId">
+            <div class="form-group">
+                <label for="categoryName">Category Name</label>
+                <input type="text" id="categoryName" placeholder="e.g. Web Development" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;">
+            </div>
+            <div class="form-group">
+                <label for="categoryDesc">Description</label>
+                <input type="text" id="categoryDesc" placeholder="Brief description" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;">
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button onclick="saveCategory()" style="flex:1;background:#3498db;color:white;padding:12px;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Save</button>
+                <button onclick="closeCategoryModal()" style="flex:1;background:#95a5a6;color:white;padding:12px;border:none;border-radius:4px;cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colors = ['#3498db','#2ecc71','#e74c3c','#9b59b6','#f39c12','#1abc9c','#e67e22','#34495e'];
+
+        async function loadCategories() {
+            try {
+                const token = window.AuthManager.getToken();
+                if (!token) { window.location.href = '/login'; return; }
+
+                const res = await fetch('/api/admin/categories', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const categories = await res.json();
+                const list = document.getElementById('categoryList');
+                const loading = document.getElementById('categoryLoading');
+
+                loading.style.display = 'none';
+
+                if (!Array.isArray(categories) || categories.length === 0) {
+                    list.innerHTML = '<p style="color:#666;text-align:center;">No categories found. Add one above.</p>';
+                    return;
+                }
+
+                list.innerHTML = categories.map((cat, i) => `
+                    <div class="category-card" style="background:linear-gradient(135deg,${colors[i % colors.length]} 0%,${colors[(i+1) % colors.length]} 100%);">
+                        <h4>${escapeHtml(cat.name)}</h4>
+                        <small>${escapeHtml(cat.description || 'No description')}</small>
+                        <div style="margin-top:10px;display:flex;gap:5px;">
+                            <button onclick="showEditCategoryModal(${cat.id},'${escapeHtml(cat.name)}','${escapeHtml(cat.description || '')}')"
+                                style="background:rgba(255,255,255,0.3);color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;">Edit</button>
+                            <button onclick="deleteCategory(${cat.id})"
+                                style="background:rgba(231,76,60,0.8);color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                document.getElementById('categoryLoading').textContent = 'Failed to load categories';
+            }
+        }
+
+        function showAddCategoryModal() {
+            document.getElementById('modalTitle').textContent = 'Add Category';
+            document.getElementById('editCategoryId').value = '';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryDesc').value = '';
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+
+        function showEditCategoryModal(id, name, description) {
+            document.getElementById('modalTitle').textContent = 'Edit Category';
+            document.getElementById('editCategoryId').value = id;
+            document.getElementById('categoryName').value = name;
+            document.getElementById('categoryDesc').value = description;
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
+
+        async function saveCategory() {
+            const id = document.getElementById('editCategoryId').value;
+            const name = document.getElementById('categoryName').value.trim();
+            const description = document.getElementById('categoryDesc').value.trim();
+
+            if (!name) { alert('Category name is required'); return; }
+
+            const token = window.AuthManager.getToken();
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/admin/categories/${id}` : '/api/admin/categories';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description })
+                });
+
+                const data = await res.json();
+                if (!res.ok) { alert(data.error || 'Failed to save'); return; }
+
+                closeCategoryModal();
+                loadCategories();
+            } catch (error) {
+                alert('Error saving category');
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Delete this category?')) return;
+            const token = window.AuthManager.getToken();
+            try {
+                const res = await fetch(`/api/admin/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    loadCategories();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.error || 'Failed to delete');
+                }
+            } catch (error) {
+                alert('Error deleting category');
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            loadCategories();
+        });
+    </script>
 </body>
 </html>

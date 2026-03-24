@@ -1,11 +1,13 @@
 package com._6.CourseManagerment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
 @Table(name = "categories")
+@JsonIgnoreProperties({"courses", "hibernateLazyInitializer", "handler"})
 public class Category {
     
     @Id

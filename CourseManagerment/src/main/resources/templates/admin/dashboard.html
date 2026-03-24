@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Course Management</title>
+    <!-- Feather Icons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <!-- Feather Icons -->
+    <!-- Feather Icons CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
     <script th:src="@{/js/auth.js}"></script>
     <script>
         // Check if user has ADMIN role before rendering page
-        // Wait for auth.js to load completely
         function checkAdminAccess() {
             if (window.AuthManager && window.AuthManager.requireRole) {
                 if (!window.AuthManager.requireRole('ADMIN', '/login')) {
-                    return; // Will redirect
+                    return;
                 }
             } else {
-                // auth.js not loaded yet, retry
                 setTimeout(checkAdminAccess, 100);
             }
         }
-        
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', checkAdminAccess);
         } else {
@@ -249,29 +249,32 @@
     </div>
     
     <script>
-        // Load statistics
+        // Load statistics from overview endpoint
         async function loadStatistics() {
             try {
-                const token = window.AuthManager ? window.AuthManager.getToken() : localStorage.getItem('token');
+                const token = window.AuthManager.getToken();
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+
                 const headers = {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
                 };
-                
-                const response = await fetch('/api/admin/statistics/roles', {
-                    headers: headers
-                });
-                
-                if (response.ok) {
-                    const stats = await response.json();
-                    document.getElementById('adminCount').textContent = stats.ADMIN || 0;
-                    document.getElementById('instructorCount').textContent = stats.INSTRUCTOR || 0;
-                    
-                    // Load recent users
-                    loadRecentUsers();
-                } else {
-                    console.error('Failed to load statistics');
+
+                // Load overview stats
+                const overviewRes = await fetch('/api/admin/statistics/overview', { headers });
+                if (overviewRes.ok) {
+                    const stats = await overviewRes.json();
+                    document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                    document.getElementById('totalCourses').textContent = stats.totalCourses || 0;
+                    document.getElementById('adminCount').textContent = stats.adminCount || 0;
+                    document.getElementById('instructorCount').textContent = stats.instructorCount || 0;
                 }
+
+                // Load recent users
+                loadRecentUsers();
             } catch (error) {
                 console.error('Error loading statistics:', error);
             }
@@ -280,15 +283,15 @@
         // Load recent users
         async function loadRecentUsers() {
             try {
-                const token = window.AuthManager ? window.AuthManager.getToken() : localStorage.getItem('token');
+                const token = window.AuthManager.getToken();
+                if (!token) return;
+
                 const headers = {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
                 };
-                
-                const response = await fetch('/api/admin/users?page=0&size=5', {
-                    headers: headers
-                });
+
+                const response = await fetch('/api/admin/users?page=0&size=5', { headers });
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -332,7 +335,5 @@
             }
         });
     </script>
-    <!-- Feather Icons JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 </body>
 </html>

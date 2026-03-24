@@ -4,32 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit User - Admin Panel</title>
+    <!-- Feather Icons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <!-- Feather Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
     <script th:src="@{/js/auth.js}"></script>
     <script>
         // Check if user has ADMIN role before rendering page
-        // Wait for auth.js to load completely
         function checkAdminAccess() {
             if (window.AuthManager && window.AuthManager.requireRole) {
                 if (!window.AuthManager.requireRole('ADMIN', '/login')) {
-                    return; // Will redirect
+                    return;
                 }
             } else {
-                // auth.js not loaded yet, retry
                 setTimeout(checkAdminAccess, 100);
             }
         }
-        
+
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                checkAdminAccess();
-                if (window.feather) feather.replace();
-            });
+            document.addEventListener('DOMContentLoaded', checkAdminAccess);
         } else {
             checkAdminAccess();
-            setTimeout(() => { if (window.feather) feather.replace(); }, 100);
         }
     </script>
     <style>
@@ -186,62 +181,192 @@
                 <li><a href="/admin/categories">Categories</a></li>
                 <li><a href="/admin/courses">Course Moderation</a></li>
                 <li><a href="/admin/statistics">Statistics</a></li>
-                <li><a href="/admin/settings" class="active">Settings</a></li>
+                <li><a href="/admin/settings">Settings</a></li>
             </ul>
         </nav>
 
         <div class="admin-content">
-            <h1>👤 Edit User Profile</h1>
+            <h1>Edit User Profile</h1>
 
             <div class="form-section">
-                <form id="editUserForm">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" value="john_doe" disabled>
-                    </div>
+                <div id="loadingState" style="text-align:center;padding:30px;color:#666;">Loading user data...</div>
+                <div id="errorState" style="display:none;text-align:center;padding:30px;color:red;"></div>
+                <div id="formState" style="display:none;">
+                    <form id="editUserForm">
+                        <input type="hidden" id="userId">
 
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" value="john@example.com" required>
-                    </div>
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" disabled>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" value="John Doe" required>
-                    </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="role">Role</label>
-                        <select id="role" name="role" required>
-                            <option value="STUDENT" selected>Student</option>
-                            <option value="INSTRUCTOR">Instructor</option>
-                            <option value="ADMIN">Admin</option>
-                        </select>
-                    </div>
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="status">Status</label>
-                        <select id="status" name="status" required>
-                            <option value="ACTIVE" selected>Active</option>
-                            <option value="LOCKED">Locked</option>
-                        </select>
-                    </div>
+                        <div class="form-group">
+                            <label for="role">Role</label>
+                            <select id="role" required>
+                                <option value="STUDENT">Student</option>
+                                <option value="INSTRUCTOR">Instructor</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
 
-                    <div class="button-group">
-                        <button type="submit" class="btn-primary">💾 Save Changes</button>
-                        <button type="button" class="btn-secondary" onclick="window.history.back()">❌ Cancel</button>
-                    </div>
-                </form>
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" required>
+                                <option value="ACTIVE">Active</option>
+                                <option value="LOCKED">Locked</option>
+                            </select>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn-primary" id="saveBtn">Save Changes</button>
+                            <button type="button" class="btn-secondary" onclick="window.location.href='/admin/users'">Cancel</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+        function getUserIdFromUrl() {
+            const pathParts = window.location.pathname.split('/');
+            return parseInt(pathParts[pathParts.length - 1]);
+        }
+
+        async function loadUser() {
+            if (!window.AuthManager?.getToken?.()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const userId = getUserIdFromUrl();
+            if (!userId || isNaN(userId)) {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                document.getElementById('errorState').textContent = 'Invalid user ID';
+                return;
+            }
+
+            try {
+                const token = window.AuthManager.getToken();
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.status === 404) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('errorState').style.display = 'block';
+                    document.getElementById('errorState').textContent = 'User not found';
+                    return;
+                }
+
+                if (!response.ok) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('errorState').style.display = 'block';
+                    document.getElementById('errorState').textContent = 'Failed to load user';
+                    return;
+                }
+
+                const user = await response.json();
+
+                document.getElementById('userId').value = user.id;
+                document.getElementById('username').value = user.username || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('fullName').value = user.fullName || '';
+                document.getElementById('role').value = user.role || 'STUDENT';
+                document.getElementById('role').dataset.currentRole = user.role || 'STUDENT';
+                document.getElementById('status').value = user.status || 'ACTIVE';
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('formState').style.display = 'block';
+                feather.replace();
+            } catch (error) {
+                console.error('Error loading user:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                document.getElementById('errorState').textContent = 'Error loading user';
+            }
+        }
+
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('✅ User profile updated successfully!');
+
+            const userId = document.getElementById('userId').value;
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+
+            try {
+                const token = window.AuthManager.getToken();
+                const currentRole = document.getElementById('role').dataset.currentRole;
+                const newRole = document.getElementById('role').value;
+
+                // Update user info
+                const updateRes = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fullName: document.getElementById('fullName').value,
+                        email: document.getElementById('email').value,
+                        status: document.getElementById('status').value
+                    })
+                });
+
+                if (!updateRes.ok) {
+                    const err = await updateRes.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to update user');
+                }
+
+                // Update role if changed
+                if (newRole !== currentRole) {
+                    const roleRes = await fetch(`/api/admin/users/${userId}/roles`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ roleName: newRole })
+                    });
+
+                    if (!roleRes.ok) {
+                        const err = await roleRes.json().catch(() => ({}));
+                        throw new Error(err.error || 'Failed to update role');
+                    }
+                }
+
+                alert('User updated successfully!');
+                window.location.href = '/admin/users';
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            loadUser();
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 </body>
 </html>

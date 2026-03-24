@@ -1,12 +1,17 @@
 package com._6.CourseManagerment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Enrollment Entity - Represents a user's enrollment in a course
+ */
 @Entity
 @Table(name = "enrollments", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "course_id"})
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Enrollment {
     
     @Id

@@ -1,8 +1,12 @@
 package com._6.CourseManagerment.controller;
 
 import com._6.CourseManagerment.dto.UserDto;
+import com._6.CourseManagerment.entity.Category;
 import com._6.CourseManagerment.entity.Role;
 import com._6.CourseManagerment.entity.User;
+import com._6.CourseManagerment.repository.CategoryRepository;
+import com._6.CourseManagerment.repository.CourseRepository;
+import com._6.CourseManagerment.repository.EnrollmentRepository;
 import com._6.CourseManagerment.repository.RoleRepository;
 import com._6.CourseManagerment.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +17,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Admin Controller - Handles administrative operations
@@ -30,9 +37,21 @@ public class AdminController {
     
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     
     /**
      * Get all users with pagination and filtering
@@ -46,29 +65,21 @@ public class AdminController {
             @RequestParam(required = false) String search) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<User> users;
-            
-            // If search is provided, search by username/email/fullName
+            Page<Object[]> result;
+
             if (search != null && !search.isEmpty()) {
-                users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
-                        search, search, search, pageable);
-            } 
-            // If role is provided, filter by role
-            else if (role != null && !role.isEmpty()) {
-                Role roleEntity = roleRepository.findByName(role)
-                        .orElse(null);
+                result = userRepository.searchUsersNative(search, pageable);
+            } else if (role != null && !role.isEmpty()) {
+                Role roleEntity = roleRepository.findByName(role).orElse(null);
                 if (roleEntity == null) {
-                    return ResponseEntity.badRequest()
-                            .body(Map.of("error", "Role not found: " + role));
+                    return ResponseEntity.badRequest().body(Map.of("error", "Role not found: " + role));
                 }
-                users = userRepository.findByRole(roleEntity, pageable);
-            } 
-            // Otherwise get all users
-            else {
-                users = userRepository.findAll(pageable);
+                result = userRepository.getUsersByRoleNative(roleEntity.getId(), pageable);
+            } else {
+                result = userRepository.getAllUsersNative(pageable);
             }
-            
-            Page<UserDto> userDtos = users.map(this::convertToDto);
+
+            Page<UserDto> userDtos = result.map(this::mapToUserDto);
             return ResponseEntity.ok(userDtos);
         } catch (Exception e) {
             log.error("Error fetching users", e);
@@ -76,19 +87,46 @@ public class AdminController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-    
+
+    private UserDto mapToUserDto(Object[] row) {
+        UserDto dto = new UserDto();
+        dto.setId(((Number) row[0]).longValue());
+        dto.setUsername((String) row[1]);
+        dto.setEmail((String) row[2]);
+        dto.setFullName((String) row[3]);
+        dto.setAvatar((String) row[4]);
+        dto.setStatus((String) row[5]);
+        if (row[6] != null) {
+            Object createdAt = row[6];
+            if (createdAt instanceof java.sql.Timestamp) {
+                dto.setCreatedAt(((java.sql.Timestamp) createdAt).toLocalDateTime());
+            } else if (createdAt instanceof java.time.LocalDateTime) {
+                dto.setCreatedAt((java.time.LocalDateTime) createdAt);
+            }
+        }
+        if (row[7] != null) {
+            Object updatedAt = row[7];
+            if (updatedAt instanceof java.sql.Timestamp) {
+                dto.setUpdatedAt(((java.sql.Timestamp) updatedAt).toLocalDateTime());
+            } else if (updatedAt instanceof java.time.LocalDateTime) {
+                dto.setUpdatedAt((java.time.LocalDateTime) updatedAt);
+            }
+        }
+        dto.setRole((String) row[8]);
+        return dto;
+    }
+
     /**
      * Get user by ID
      */
     @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         try {
-            User user = userRepository.findById(id)
-                    .orElse(null);
-            if (user == null) {
+            List<Object[]> result = userRepository.findUserByIdNative(id);
+            if (result.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(convertToDto(user));
+            return ResponseEntity.ok(mapToUserDto(result.get(0)));
         } catch (Exception e) {
             log.error("Error fetching user", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -97,73 +135,105 @@ public class AdminController {
     }
     
     /**
-     * Update user information
+     * Update user information (uses native update to avoid broken role FK)
      */
+    @Transactional
     @PutMapping("/users/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         try {
-            User user = userRepository.findById(id)
-                    .orElse(null);
-            if (user == null) {
+            // Check user exists using native query
+            if (userRepository.findUserByIdNative(id).isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
-            // Update fields
+
+            // Build dynamic update SQL
+            List<Object> params = new ArrayList<>();
+            List<String> setClauses = new ArrayList<>();
+
             if (updates.containsKey("fullName")) {
-                user.setFullName((String) updates.get("fullName"));
+                setClauses.add("full_name = ?");
+                params.add(updates.get("fullName"));
             }
             if (updates.containsKey("status")) {
-                user.setStatus((String) updates.get("status"));
+                setClauses.add("status = ?");
+                params.add(updates.get("status"));
             }
             if (updates.containsKey("email")) {
-                user.setEmail((String) updates.get("email"));
+                setClauses.add("email = ?");
+                params.add(updates.get("email"));
             }
-            
-            userRepository.save(user);
-            return ResponseEntity.ok(convertToDto(user));
+
+            if (setClauses.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No fields to update"));
+            }
+
+            params.add(id);
+            String sql = "UPDATE users SET " + String.join(", ", setClauses) + " WHERE id = ?";
+            jdbcTemplate.update(sql, params.toArray());
+
+            // Return updated user
+            List<Object[]> result = userRepository.findUserByIdNative(id);
+            if (result.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapToUserDto(result.get(0)));
         } catch (Exception e) {
             log.error("Error updating user", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     /**
      * Assign role to user (replaces current role)
      */
+    @Transactional
     @PostMapping("/users/{id}/roles")
     public ResponseEntity<?> assignRoleToUser(
             @PathVariable Long id,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, Object> request) {
         try {
-            User user = userRepository.findById(id)
-                    .orElse(null);
-            if (user == null) {
+            // Check user exists using native query
+            List<Object[]> userResult = userRepository.findUserByIdNative(id);
+            if (userResult.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
-            String roleName = request.get("roleName");
-            Role role = roleRepository.findByName(roleName)
-                    .orElse(null);
-            if (role == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Role not found: " + roleName));
+
+            Long roleId = null;
+            String roleName = null;
+            if (request.containsKey("roleId")) {
+                roleId = Long.valueOf(request.get("roleId").toString());
+            } else if (request.containsKey("roleName")) {
+                roleName = (String) request.get("roleName");
             }
-            
-            // Replace the user's current role with the new one
-            user.setRole(role);
-            
-            userRepository.save(user);
-            log.info("Role {} assigned to user {}", roleName, user.getUsername());
-            
-            return ResponseEntity.ok(convertToDto(user));
+
+            Long finalRoleId = roleId;
+            Role role = null;
+            if (roleId != null) {
+                role = roleRepository.findById(roleId).orElse(null);
+            } else if (roleName != null) {
+                role = roleRepository.findByName(roleName).orElse(null);
+                if (role != null) finalRoleId = role.getId();
+            }
+
+            if (role == null || finalRoleId == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Role not found"));
+            }
+
+            // Use native update to avoid broken FK issue
+            userRepository.updateUserRole(id, finalRoleId);
+
+            // Return updated user using native query
+            List<Object[]> result = userRepository.findUserByIdNative(id);
+            return ResponseEntity.ok(mapToUserDto(result.get(0)));
         } catch (Exception e) {
             log.error("Error assigning role", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     /**
      * Remove role from user (not applicable for single-role system, returns error)
      */
@@ -176,28 +246,33 @@ public class AdminController {
     }
     
     /**
-     * Lock/unlock user account
+     * Lock/unlock user account (uses native update to avoid broken role FK)
      */
+    @Transactional
     @PostMapping("/users/{id}/status")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
         try {
-            User user = userRepository.findById(id)
-                    .orElse(null);
-            if (user == null) {
+            // Check user exists using native query
+            if (userRepository.findUserByIdNative(id).isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
             String status = request.get("status"); // ACTIVE or LOCKED
-            if (!status.equals("ACTIVE") && !status.equals("LOCKED")) {
+            if (!"ACTIVE".equals(status) && !"LOCKED".equals(status)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Invalid status. Must be ACTIVE or LOCKED"));
             }
-            
-            user.setStatus(status);
-            userRepository.save(user);
-            return ResponseEntity.ok(convertToDto(user));
+
+            jdbcTemplate.update("UPDATE users SET status = ? WHERE id = ?", status, id);
+
+            // Return updated user
+            List<Object[]> result = userRepository.findUserByIdNative(id);
+            if (result.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapToUserDto(result.get(0)));
         } catch (Exception e) {
             log.error("Error updating user status", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -206,18 +281,20 @@ public class AdminController {
     }
     
     /**
-     * Delete user
+     * Delete user (uses native query to avoid broken role FK)
      */
+    @Transactional
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
-            User user = userRepository.findById(id)
-                    .orElse(null);
-            if (user == null) {
+            // Check user exists using native count
+            Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE id = ?", Long.class, id);
+            if (count == null || count == 0) {
                 return ResponseEntity.notFound().build();
             }
-            
-            userRepository.delete(user);
+
+            userRepository.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
         } catch (Exception e) {
             log.error("Error deleting user", e);
@@ -226,6 +303,131 @@ public class AdminController {
         }
     }
     
+    /**
+     * Get comprehensive platform statistics
+     */
+    @GetMapping("/statistics/overview")
+    public ResponseEntity<?> getOverviewStatistics() {
+        try {
+            long totalUsers = userRepository.count();
+            long totalCourses = courseRepository.count();
+            long totalEnrollments = enrollmentRepository.count();
+
+            Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
+            Role instructorRole = roleRepository.findByName("INSTRUCTOR").orElse(null);
+
+            long adminCount = adminRole != null ? userRepository.countByRoleIdNative(adminRole.getId()) : 0;
+            long instructorCount = instructorRole != null ? userRepository.countByRoleIdNative(instructorRole.getId()) : 0;
+
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalUsers", totalUsers);
+            stats.put("totalCourses", totalCourses);
+            stats.put("totalEnrollments", totalEnrollments);
+            stats.put("adminCount", adminCount);
+            stats.put("instructorCount", instructorCount);
+
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error fetching overview statistics", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get all categories for admin management
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<?> getAllCategories() {
+        try {
+            List<Category> categories = categoryRepository.findAll();
+            return ResponseEntity.ok(categories);
+        } catch (Exception e) {
+            log.error("Error fetching categories", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Create a new category
+     */
+    @PostMapping("/categories")
+    public ResponseEntity<?> createCategory(@RequestBody Map<String, String> request) {
+        try {
+            String name = request.get("name");
+            String description = request.get("description");
+
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Category name is required"));
+            }
+
+            if (categoryRepository.existsByName(name.trim())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Category already exists: " + name));
+            }
+
+            Category category = new Category();
+            category.setName(name.trim());
+            category.setDescription(description != null ? description.trim() : null);
+
+            Category saved = categoryRepository.save(category);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            log.error("Error creating category", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Update a category
+     */
+    @PutMapping("/categories/{id}")
+    public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        try {
+            Category category = categoryRepository.findById(id).orElse(null);
+            if (category == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (request.containsKey("name")) {
+                String name = request.get("name").trim();
+                if (!name.isEmpty() && !name.equals(category.getName()) && categoryRepository.existsByName(name)) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Category already exists: " + name));
+                }
+                category.setName(name);
+            }
+            if (request.containsKey("description")) {
+                category.setDescription(request.get("description"));
+            }
+
+            Category saved = categoryRepository.save(category);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            log.error("Error updating category", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Delete a category
+     */
+    @DeleteMapping("/categories/{id}")
+    public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
+        try {
+            if (!categoryRepository.existsById(id)) {
+                return ResponseEntity.notFound().build();
+            }
+            categoryRepository.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "Category deleted successfully"));
+        } catch (Exception e) {
+            log.error("Error deleting category", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     /**
      * Get role statistics
      */
@@ -249,7 +451,7 @@ public class AdminController {
     }
     
     /**
-     * Helper method to convert User to UserDto
+     * Helper method to convert User to UserDto (handles broken role FK gracefully)
      */
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
@@ -260,7 +462,12 @@ public class AdminController {
         dto.setAvatar(user.getAvatar());
         dto.setStatus(user.getStatus());
         dto.setCreatedAt(user.getCreatedAt());
-        dto.setRole(user.getRole().getName());
+        try {
+            dto.setRole(user.getRole() != null ? user.getRole().getName() : null);
+        } catch (Exception e) {
+            // Role FK is broken (role_id points to non-existent role)
+            dto.setRole(null);
+        }
         return dto;
     }
 }

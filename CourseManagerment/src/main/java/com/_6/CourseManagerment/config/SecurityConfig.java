@@ -167,7 +167,7 @@ public class SecurityConfig {
                 // ==================
                 // STATIC ASSETS
                 // ==================
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/favicon.ico").permitAll()
                 
                 // ==================
                 // API DOCUMENTATION

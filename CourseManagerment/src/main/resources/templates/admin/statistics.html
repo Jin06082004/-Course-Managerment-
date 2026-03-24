@@ -4,24 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Statistics - Admin Panel</title>
+    <!-- Feather Icons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <!-- Feather Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
     <script th:src="@{/js/auth.js}"></script>
     <script>
         // Check if user has ADMIN role before rendering page
-        // Wait for auth.js to load completely
         function checkAdminAccess() {
             if (window.AuthManager && window.AuthManager.requireRole) {
                 if (!window.AuthManager.requireRole('ADMIN', '/login')) {
-                    return; // Will redirect
+                    return;
                 }
             } else {
-                // auth.js not loaded yet, retry
                 setTimeout(checkAdminAccess, 100);
             }
         }
-        
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', checkAdminAccess);
         } else {
@@ -220,37 +219,35 @@
     </div>
     
     <script>
-        // Load statistics
         async function loadStatistics() {
             try {
-                const token = window.AuthManager ? window.AuthManager.getToken() : localStorage.getItem('token');
+                const token = window.AuthManager.getToken();
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+
                 const headers = {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
                 };
-                
-                const response = await fetch('/api/admin/statistics/roles', {
-                    headers: headers
-                });
-                
+
+                const response = await fetch('/api/admin/statistics/overview', { headers });
                 if (response.ok) {
                     const stats = await response.json();
-                    // Update stat cards as they're loaded
+                    document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                    document.getElementById('totalCourses').textContent = stats.totalCourses || 0;
+                    document.getElementById('totalEnrollments').textContent = stats.totalEnrollments || 0;
                 }
             } catch (error) {
                 console.error('Error loading statistics:', error);
             }
         }
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             loadStatistics();
-            // Initialize feather icons
-            if (window.feather) {
-                feather.replace();
-            }
+            feather.replace();
         });
     </script>
-    <!-- Feather Icons JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 </body>
 </html>

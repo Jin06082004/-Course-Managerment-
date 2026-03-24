@@ -187,7 +187,9 @@
             
             // Show/hide role-based menu items
             function updateRoleMenuItems() {
-                const token = localStorage.getItem('token');
+                const token = (window.AuthManager && typeof window.AuthManager.getToken === 'function')
+                    ? window.AuthManager.getToken()
+                    : localStorage.getItem('authToken');
                 if (!token) return;
                 
                 // Decode JWT token to get user roles

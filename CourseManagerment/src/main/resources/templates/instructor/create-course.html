@@ -5,152 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Course - Instructor Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .instructor-container {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 20px;
-            min-height: 100vh;
-            background-color: #f5f5f5;
-        }
-        
-        .instructor-sidebar {
-            background-color: #27ae60;
-            color: white;
-            padding: 20px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: 250px;
-            overflow-y: auto;
-        }
-        
-        .instructor-sidebar h3 {
-            margin-top: 0;
-            border-bottom: 2px solid #2ecc71;
-            padding-bottom: 10px;
-        }
-        
-        .instructor-sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .instructor-sidebar li {
-            margin: 10px 0;
-        }
-        
-        .instructor-sidebar a {
-            color: white;
-            text-decoration: none;
-            display: block;
-            padding: 10px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        
-        .instructor-sidebar a:hover {
-            background-color: #229954;
-        }
-        
-        .instructor-sidebar a.active {
-            background-color: #2ecc71;
-            font-weight: bold;
-        }
-        
-        .instructor-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-        
-        .form-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            max-width: 800px;
-        }
-        
-        .form-section h3 {
-            margin-top: 0;
-            border-bottom: 2px solid #27ae60;
-            padding-bottom: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #27ae60;
-            box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
-        }
-        
-        .btn-submit {
-            background-color: #27ae60;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-submit:hover {
-            background-color: #229954;
-        }
-        
-        .btn-cancel {
-            background-color: #95a5a6;
-            color: white;
-            padding: 12px 30px;
-            margin-left: 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-cancel:hover {
-            background-color: #7f8c8d;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/instructor.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
 </head>
-<body>
+<body class="instructor-app">
     <div th:replace="fragments/navbar"></div>
     
     <div class="instructor-container">
@@ -169,7 +29,10 @@
         
         <!-- Main Content -->
         <div class="instructor-content">
-            <h1>Create New Course</h1>
+            <header class="instructor-page-header">
+                <p class="eyebrow">Courses</p>
+                <h1>Create new course</h1>
+            </header>
             
             <form class="form-section" id="createCourseForm">
                 <h3>Course Information</h3>
@@ -187,11 +50,7 @@
                 <div class="form-group">
                     <label for="category">Category</label>
                     <select id="category" name="category" required>
-                        <option value="">Select a category...</option>
-                        <option value="1">Programming</option>
-                        <option value="2">Design</option>
-                        <option value="3">Business</option>
-                        <option value="4">Other</option>
+                        <option value="">Loading categories...</option>
                     </select>
                 </div>
                 
@@ -209,6 +68,11 @@
                     <label for="price">Price ($)</label>
                     <input type="number" id="price" name="price" step="0.01" min="0" value="0">
                 </div>
+
+                <div class="form-group">
+                    <label for="duration">Duration (hours)</label>
+                    <input type="number" id="duration" name="duration" step="1" min="1" value="10">
+                </div>
                 
                 <div style="margin-top: 20px;">
                     <button type="submit" class="btn-submit">Create Course</button>
@@ -219,12 +83,102 @@
     </div>
     
     <script>
+        async function loadCategories() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/instructor/categories', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const cats = await res.json();
+                    const sel = document.getElementById('category');
+                    sel.innerHTML = '<option value="">Select a category...</option>';
+                    cats.forEach(c => {
+                        sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                    });
+                } else if (res.status === 403) {
+                    alert('Access denied. Instructors only.');
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         document.getElementById('createCourseForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            // TODO: Implement course creation
-            alert('Course creation coming soon!');
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const categoryId = parseInt(document.getElementById('category').value);
+            const level = document.getElementById('level').value;
+            const priceVal = parseFloat(document.getElementById('price').value) || 0;
+            const durationVal = parseInt(document.getElementById('duration') ? document.getElementById('duration').value : '0') || 0;
+
+            if (!title) { alert('Title is required'); return; }
+            if (!description) { alert('Description is required'); return; }
+            if (!categoryId) { alert('Please select a category'); return; }
+            if (!level) { alert('Please select a level'); return; }
+
+            const payload = {
+                title,
+                description,
+                code: 'C' + Date.now(),
+                categoryId,
+                level,
+                price: priceVal,
+                duration: durationVal
+            };
+
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            try {
+                const res = await fetch('/api/instructor/courses', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const course = await res.json();
+                    alert('Course created as draft. On the next page, click "Publish Course" so it appears on Explore Courses (/courses).');
+                    window.location.href = '/instructor/courses/' + course.id + '/edit';
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Failed to create course: ' + (err.error || res.statusText));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Course';
+            }
         });
+
+        document.addEventListener('DOMContentLoaded', loadCategories);
     </script>
 </body>
 </html>

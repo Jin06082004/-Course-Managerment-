@@ -5,13 +5,281 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Course - Instructor Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/instructor.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
 </head>
-<body>
+<body class="instructor-app">
     <div th:replace="fragments/navbar"></div>
-    <div style="margin: 50px; text-align: center;">
-        <h1>Edit Course</h1>
-        <p style="color: #999;">This page is coming soon. For now, use your dashboard to manage courses.</p>
-        <a href="/instructor/courses" style="background: #27ae60; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; text-decoration: none;">Back to My Courses</a>
+
+    <div class="instructor-container">
+        <nav class="instructor-sidebar">
+            <h3>Instructor Panel</h3>
+            <ul>
+                <li><a href="/instructor">Dashboard</a></li>
+                <li><a href="/instructor/courses">My Courses</a></li>
+                <li><a href="/instructor/courses/new">Create Course</a></li>
+                <li><a href="/instructor/statistics">Statistics</a></li>
+                <li><a href="/instructor/earnings">Earnings</a></li>
+                <li><a href="/instructor/settings">Settings</a></li>
+            </ul>
+        </nav>
+
+        <div class="instructor-content">
+            <div id="alertBox" style="display:none;"></div>
+
+            <div id="loadingState">
+                <p class="empty-state">Loading course data…</p>
+            </div>
+
+            <div id="formState" style="display:none;">
+                <header class="instructor-page-header">
+                    <p class="eyebrow">Course editor</p>
+                    <h1 id="courseHeading">Edit course</h1>
+                </header>
+
+                <form class="form-section" id="editCourseForm" style="max-width: 920px;">
+                    <h3>Course Information</h3>
+
+                    <div class="form-group">
+                        <label for="title">Course Title</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="level">Level</label>
+                            <select id="level" name="level" required>
+                                <option value="">Select a level...</option>
+                                <option value="BEGINNER">Beginner</option>
+                                <option value="INTERMEDIATE">Intermediate</option>
+                                <option value="ADVANCED">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price">Price ($)</label>
+                            <input type="number" id="price" name="price" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">Duration (hours)</label>
+                            <input type="number" id="duration" name="duration" step="1" min="1">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="DRAFT">Draft</option>
+                                <option value="PUBLISHED">Published</option>
+                                <option value="ARCHIVED">Archived</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <div id="currentStatusBadge" style="padding-top:8px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="thumbnailUrl">Thumbnail URL</label>
+                        <input type="text" id="thumbnailUrl" name="thumbnailUrl" placeholder="https://...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="videoUrl">Intro Video URL</label>
+                        <input type="text" id="videoUrl" name="videoUrl" placeholder="https://...">
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                        <a href="/instructor/courses" class="btn btn-secondary">Back to Courses</a>
+                        <button type="button" class="btn btn-danger" style="float:right;" id="publishBtn">Publish Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <script>
+        let courseId = null;
+        let currentData = null;
+        let categories = [];
+
+        function getCourseIdFromUrl() {
+            const parts = window.location.pathname.split('/');
+            return parseInt(parts[parts.length - 2]);
+        }
+
+        function showAlert(msg, type) {
+            const box = document.getElementById('alertBox');
+            box.className = 'alert alert-' + type;
+            box.textContent = msg;
+            box.style.display = 'block';
+            box.scrollIntoView();
+        }
+
+        function getStatusBadge(status) {
+            const cls = status === 'PUBLISHED' ? 'status-published'
+                : status === 'ARCHIVED' ? 'status-archived' : 'status-draft';
+            return `<span class="status-badge ${cls}">${status || 'DRAFT'}</span>`;
+        }
+
+        async function loadCourse() {
+            courseId = getCourseIdFromUrl();
+            const token = localStorage.getItem('authToken');
+            if (!token) { window.location.href = '/login'; return; }
+
+            try {
+                const [courseRes, catRes] = await Promise.all([
+                    fetch(`/api/instructor/courses/${courseId}`, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    }),
+                    fetch('/api/instructor/categories', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    })
+                ]);
+
+                if (courseRes.status === 403 || catRes.status === 403) {
+                    alert('Access denied. Instructors only.');
+                    window.location.href = '/';
+                    return;
+                }
+                if (courseRes.status === 404) {
+                    showAlert('Course not found.', 'error');
+                    document.getElementById('loadingState').style.display = 'none';
+                    return;
+                }
+                if (!courseRes.ok) throw new Error('Failed to load course');
+
+                const course = await courseRes.json();
+                categories = catRes.ok ? await catRes.json() : [];
+
+                currentData = course;
+                document.getElementById('courseHeading').textContent = 'Edit: ' + course.title;
+
+                document.getElementById('title').value = course.title || '';
+                document.getElementById('description').value = course.description || '';
+                document.getElementById('level').value = course.level || '';
+                document.getElementById('price').value = course.price || 0;
+                document.getElementById('duration').value = course.duration || 0;
+                document.getElementById('status').value = course.status || 'DRAFT';
+                document.getElementById('thumbnailUrl').value = course.thumbnailUrl || '';
+                document.getElementById('videoUrl').value = course.videoUrl || '';
+
+                const catSel = document.getElementById('category');
+                catSel.innerHTML = '<option value="">Select category...</option>';
+                categories.forEach(c => {
+                    const sel = c.id === course.categoryId ? 'selected' : '';
+                    catSel.innerHTML += `<option value="${c.id}" ${sel}>${c.name}</option>`;
+                });
+
+                document.getElementById('currentStatusBadge').innerHTML = getStatusBadge(course.status);
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('formState').style.display = 'block';
+            } catch (e) {
+                console.error(e);
+                showAlert('Error loading course: ' + e.message, 'error');
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        }
+
+        document.getElementById('editCourseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('authToken');
+            if (!token) { window.location.href = '/login'; return; }
+
+            const payload = {
+                title: document.getElementById('title').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                level: document.getElementById('level').value,
+                price: parseFloat(document.getElementById('price').value) || 0,
+                duration: parseInt(document.getElementById('duration').value) || 0,
+                status: document.getElementById('status').value,
+                thumbnailUrl: document.getElementById('thumbnailUrl').value.trim(),
+                videoUrl: document.getElementById('videoUrl').value.trim()
+            };
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`/api/instructor/courses/${courseId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const updated = await res.json();
+                    document.getElementById('status').value = updated.status;
+                    document.getElementById('currentStatusBadge').innerHTML = getStatusBadge(updated.status);
+                    showAlert('Course saved successfully!', 'success');
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    showAlert('Failed to save: ' + (err.error || res.statusText), 'error');
+                }
+            } catch (err) {
+                showAlert('Error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Changes';
+            }
+        });
+
+        document.getElementById('publishBtn').addEventListener('click', async function() {
+            const token = localStorage.getItem('authToken');
+            if (!token) { window.location.href = '/login'; return; }
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Publishing...';
+
+            try {
+                const res = await fetch(`/api/instructor/courses/${courseId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'PUBLISHED' })
+                });
+
+                if (res.ok) {
+                    const updated = await res.json();
+                    document.getElementById('status').value = 'PUBLISHED';
+                    document.getElementById('currentStatusBadge').innerHTML = getStatusBadge('PUBLISHED');
+                    showAlert('Course published successfully! It is now visible to students.', 'success');
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    showAlert('Failed to publish: ' + (err.error || res.statusText), 'error');
+                }
+            } catch (err) {
+                showAlert('Error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Publish Course';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadCourse);
+    </script>
 </body>
 </html>

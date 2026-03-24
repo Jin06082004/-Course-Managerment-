@@ -5,13 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Students - Instructor Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/instructor.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
 </head>
-<body>
+<body class="instructor-app">
     <div th:replace="fragments/navbar"></div>
-    <div style="margin: 50px; text-align: center;">
-        <h1>Course Students</h1>
-        <p style="color: #999;">Student management feature coming soon.</p>
-        <a href="/instructor/courses" style="background: #27ae60; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; text-decoration: none;">Back to My Courses</a>
+
+    <div class="instructor-container">
+        <nav class="instructor-sidebar">
+            <h3>Instructor Panel</h3>
+            <ul>
+                <li><a href="/instructor">Dashboard</a></li>
+                <li><a href="/instructor/courses">My Courses</a></li>
+                <li><a href="/instructor/courses/new">Create Course</a></li>
+                <li><a href="/instructor/statistics">Statistics</a></li>
+                <li><a href="/instructor/earnings">Earnings</a></li>
+                <li><a href="/instructor/settings">Settings</a></li>
+            </ul>
+        </nav>
+
+        <div class="instructor-content">
+            <header class="instructor-page-header" style="margin-bottom: 1rem;">
+                <p class="eyebrow">Roster</p>
+                <h1 style="font-size: 1.35rem;">Students</h1>
+            </header>
+            <div class="course-info-bar">
+                <h2 id="courseTitle">Course</h2>
+                <span id="studentCount">Loading…</span>
+            </div>
+
+            <div class="instructor-section">
+                <h3>Enrolled students</h3>
+                <div id="loadingState"><p class="empty-state">Loading students…</p></div>
+                <div id="emptyState" class="empty-state" style="display:none;">
+                    <p>No students enrolled yet.</p>
+                    <p>Publish your course to attract students!</p>
+                </div>
+                <div id="studentsTable" style="display:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Email</th>
+                                <th>Enrolled Date</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsBody"></tbody>
+                    </table>
+                    <div id="pagination" class="pagination"></div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        let courseId = null;
+        let currentPage = 0;
+
+        function getCourseIdFromUrl() {
+            const parts = window.location.pathname.split('/');
+            return parseInt(parts[parts.length - 2]);
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString();
+        }
+
+        function getStatusBadge(status) {
+            const cls = status === 'ACTIVE' ? 'badge-active'
+                : status === 'COMPLETED' ? 'badge-completed' : 'badge-cancelled';
+            return `<span class="badge ${cls}">${status || 'ACTIVE'}</span>`;
+        }
+
+        async function loadStudents(page = 0) {
+            const token = localStorage.getItem('authToken');
+            if (!token) { window.location.href = '/login'; return; }
+
+            try {
+                const res = await fetch(`/api/instructor/courses/${courseId}/students?page=${page}&size=15`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 403) { alert('Access denied.'); window.location.href = '/'; return; }
+                if (res.status === 404) { alert('Course not found.'); window.location.href = '/instructor/courses'; return; }
+                if (!res.ok) throw new Error('Failed to load students');
+
+                const data = await res.json();
+                document.getElementById('courseTitle').textContent = data.courseTitle || 'Course Students';
+                document.getElementById('studentCount').textContent = `${data.totalElements || 0} enrolled`;
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (!data.students || data.students.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                const tbody = document.getElementById('studentsBody');
+                tbody.innerHTML = '';
+                data.students.forEach(s => {
+                    const progress = s.progress || 0;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div class="avatar">${getInitials(s.fullName)}</div>
+                                    <div>
+                                        <div style="font-weight:600;">${s.fullName || s.username}</div>
+                                        <div style="font-size:12px; color:#999;">@${s.username}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${s.email || '-'}</td>
+                            <td>${formatDate(s.enrolledAt)}</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <div class="progress-bar" style="width:100px;">
+                                        <div class="progress-fill" style="width:${progress}%;"></div>
+                                    </div>
+                                    <span style="font-size:12px; color:#666;">${progress}%</span>
+                                </div>
+                            </td>
+                            <td>${getStatusBadge(s.status)}</td>
+                        </tr>
+                    `;
+                });
+
+                // Pagination
+                const pg = document.getElementById('pagination');
+                pg.innerHTML = '';
+                if (data.totalPages > 1) {
+                    for (let i = 0; i < data.totalPages; i++) {
+                        const btn = document.createElement(i === data.number ? 'span' : 'a');
+                        btn.textContent = i + 1;
+                        if (i === data.number) btn.classList.add('active');
+                        else btn.onclick = () => loadStudents(i);
+                        pg.appendChild(btn);
+                    }
+                }
+
+                document.getElementById('studentsTable').style.display = 'block';
+                currentPage = page;
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loadingState').innerHTML = '<p style="color:red;">Error: ' + e.message + '</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            courseId = getCourseIdFromUrl();
+            loadStudents(0);
+        });
+    </script>
 </body>
 </html>

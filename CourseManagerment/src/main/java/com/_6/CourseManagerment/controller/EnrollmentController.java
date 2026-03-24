@@ -1,6 +1,7 @@
 package com._6.CourseManagerment.controller;
 
 import com._6.CourseManagerment.dto.EnrollmentDto;
+import com._6.CourseManagerment.dto.PageResponse;
 import com._6.CourseManagerment.security.SecurityUtils;
 import com._6.CourseManagerment.service.EnrollmentService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 
 @RestController
@@ -38,12 +40,10 @@ public class EnrollmentController {
             Long userId = extractUserIdFromAuth();
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             Page<EnrollmentDto> enrollments = enrollmentService.getMyEnrollments(userId, pageable);
-            return ResponseEntity.ok(enrollments);
+            return ResponseEntity.ok(toPageResponse(enrollments));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -59,12 +59,10 @@ public class EnrollmentController {
             Long userId = extractUserIdFromAuth();
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "lastAccessedDate"));
             Page<EnrollmentDto> enrollments = enrollmentService.getActiveEnrollments(userId, pageable);
-            return ResponseEntity.ok(enrollments);
+            return ResponseEntity.ok(toPageResponse(enrollments));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -80,12 +78,10 @@ public class EnrollmentController {
             Long userId = extractUserIdFromAuth();
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "completionDate"));
             Page<EnrollmentDto> enrollments = enrollmentService.getCompletedEnrollments(userId, pageable);
-            return ResponseEntity.ok(enrollments);
+            return ResponseEntity.ok(toPageResponse(enrollments));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -101,9 +97,7 @@ public class EnrollmentController {
             return ResponseEntity.status(HttpStatus.CREATED).body(enrollment);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -122,9 +116,7 @@ public class EnrollmentController {
             }});
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -139,9 +131,7 @@ public class EnrollmentController {
             return ResponseEntity.ok(enrollment);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -158,9 +148,7 @@ public class EnrollmentController {
             return ResponseEntity.ok(enrollment);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -175,9 +163,7 @@ public class EnrollmentController {
             return ResponseEntity.ok(enrollment);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -190,14 +176,10 @@ public class EnrollmentController {
         try {
             Long userId = extractUserIdFromAuth();
             enrollmentService.unenrollUserFromCourse(userId, courseId);
-            return ResponseEntity.ok(new HashMap<String, String>() {{
-                put("message", "Successfully unenrolled from course");
-            }});
+            return ResponseEntity.ok(Collections.singletonMap("message", "Successfully unenrolled from course"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -213,12 +195,10 @@ public class EnrollmentController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<EnrollmentDto> enrollments = enrollmentService.getCourseEnrollments(courseId, pageable);
-            return ResponseEntity.ok(enrollments);
+            return ResponseEntity.ok(toPageResponse(enrollments));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new HashMap<String, String>() {{
-                        put("error", e.getMessage());
-                    }});
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
     
@@ -231,5 +211,20 @@ public class EnrollmentController {
             throw new Exception("User not authenticated or userId not found in token");
         }
         return userId;
+    }
+    
+    /**
+     * Convert Spring Page to flat PageResponse — avoids PageImpl Hibernate proxy serialization issues.
+     */
+    private <T> PageResponse<T> toPageResponse(Page<T> page) {
+        return new PageResponse<>(
+            page.getContent(),
+            page.getTotalElements(),
+            page.getTotalPages(),
+            page.getNumber(),
+            page.getSize(),
+            page.isFirst(),
+            page.isLast()
+        );
     }
 }

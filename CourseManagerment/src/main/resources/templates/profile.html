@@ -505,9 +505,13 @@
 
             document.getElementById('infoEmail').textContent = profile.email || '—';
 
-            // Role
-            const roles = profile.roles || [];
-            const roleName = roles.length > 0 ? roles[0].replace('ROLE_', '') : 'STUDENT';
+            // Role: GET/PUT /api/auth/profile returns singular `role` (e.g. INSTRUCTOR), not `roles[]`
+            let roleName = 'STUDENT';
+            if (Array.isArray(profile.roles) && profile.roles.length > 0) {
+                roleName = String(profile.roles[0]).replace(/^ROLE_/, '');
+            } else if (profile.role) {
+                roleName = String(profile.role).replace(/^ROLE_/, '');
+            }
             const roleLabels = { ADMIN: 'Quản trị viên', INSTRUCTOR: 'Giảng viên', STUDENT: 'Học sinh' };
             document.getElementById('displayRole').textContent = roleLabels[roleName] || roleName;
 

@@ -1,5 +1,6 @@
 package com._6.CourseManagerment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "wishlists", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "course_id"})
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Wishlist {
 
     @Id

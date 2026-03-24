@@ -1,5 +1,6 @@
 package com._6.CourseManagerment.controller;
 
+import com._6.CourseManagerment.dto.PageResponse;
 import com._6.CourseManagerment.dto.WishlistDto;
 import com._6.CourseManagerment.security.SecurityUtils;
 import com._6.CourseManagerment.service.WishlistService;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -44,11 +46,11 @@ public class WishlistController {
             Long userId = SecurityUtils.getCurrentUserId();
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             Page<WishlistDto> wishlist = wishlistService.getUserWishlist(userId, pageable);
-            return ResponseEntity.ok(wishlist);
+            return ResponseEntity.ok(toPageResponse(wishlist));
         } catch (Exception e) {
             log.error("Failed to get wishlist: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new HashMap<String, String>() {{ put("error", e.getMessage()); }});
+                .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
@@ -68,7 +70,7 @@ public class WishlistController {
         } catch (Exception e) {
             log.error("Failed to toggle wishlist: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new HashMap<String, String>() {{ put("error", e.getMessage()); }});
+                .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
@@ -84,7 +86,7 @@ public class WishlistController {
         } catch (Exception e) {
             log.error("Failed to add to wishlist: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new HashMap<String, String>() {{ put("error", e.getMessage()); }});
+                .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
@@ -96,11 +98,11 @@ public class WishlistController {
         try {
             Long userId = SecurityUtils.getCurrentUserId();
             wishlistService.removeFromWishlist(userId, courseId);
-            return ResponseEntity.ok(new HashMap<String, String>() {{ put("message", "Removed from wishlist"); }});
+            return ResponseEntity.ok(Collections.singletonMap("message", "Removed from wishlist"));
         } catch (Exception e) {
             log.error("Failed to remove from wishlist: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new HashMap<String, String>() {{ put("error", e.getMessage()); }});
+                .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
@@ -118,7 +120,19 @@ public class WishlistController {
             }});
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new HashMap<String, String>() {{ put("error", e.getMessage()); }});
+                .body(Collections.singletonMap("error", e.getMessage()));
         }
+    }
+
+    private <T> PageResponse<T> toPageResponse(Page<T> page) {
+        return new PageResponse<>(
+            page.getContent(),
+            page.getTotalElements(),
+            page.getTotalPages(),
+            page.getNumber(),
+            page.getSize(),
+            page.isFirst(),
+            page.isLast()
+        );
     }
 }
