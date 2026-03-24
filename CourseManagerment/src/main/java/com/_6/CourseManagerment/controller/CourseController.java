@@ -2,6 +2,7 @@ package com._6.CourseManagerment.controller;
 
 import com._6.CourseManagerment.dto.CourseDto;
 import com._6.CourseManagerment.dto.CreateCourseRequest;
+import com._6.CourseManagerment.dto.PageResponse;
 import com._6.CourseManagerment.security.SecurityUtils;
 import com._6.CourseManagerment.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ public class CourseController {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             Page<CourseDto> courses = courseService.getAllCourses(pageable);
-            return ResponseEntity.ok(courses);
+            return ResponseEntity.ok(toPageResponse(courses));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new HashMap<String, String>() {{
@@ -76,7 +77,7 @@ public class CourseController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<CourseDto> courses = courseService.searchCourses(title, categoryId, level, pageable);
-            return ResponseEntity.ok(courses);
+            return ResponseEntity.ok(toPageResponse(courses));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new HashMap<String, String>() {{
@@ -115,7 +116,7 @@ public class CourseController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<CourseDto> courses = courseService.getCoursesByCategory(categoryId, pageable);
-            return ResponseEntity.ok(courses);
+            return ResponseEntity.ok(toPageResponse(courses));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new HashMap<String, String>() {{
@@ -135,7 +136,7 @@ public class CourseController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<CourseDto> courses = courseService.getCoursesByInstructor(instructorId, pageable);
-            return ResponseEntity.ok(courses);
+            return ResponseEntity.ok(toPageResponse(courses));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new HashMap<String, String>() {{
@@ -244,5 +245,17 @@ public class CourseController {
     private Long extractUserIdFromAuth(Authentication authentication) {
         Long userId = SecurityUtils.getCurrentUserId();
         return userId != null ? userId : 1L;
+    }
+
+    private <T> PageResponse<T> toPageResponse(Page<T> page) {
+        return new PageResponse<>(
+            page.getContent(),
+            page.getTotalElements(),
+            page.getTotalPages(),
+            page.getNumber(),
+            page.getSize(),
+            page.isFirst(),
+            page.isLast()
+        );
     }
 }

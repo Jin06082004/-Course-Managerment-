@@ -193,6 +193,31 @@ const ApiService = {
     },
 
     /**
+     * Preload wishlist course IDs into _wishlistCache (heart icons on grids).
+     * Safe to call when logged in; failures are ignored so listing pages still load.
+     */
+    async loadWishlist({ page = 0, size = 200 } = {}) {
+        const token = (typeof window !== 'undefined' && window.AuthManager && typeof window.AuthManager.getToken === 'function')
+            ? window.AuthManager.getToken()
+            : null;
+        if (!token) return;
+
+        try {
+            const data = await this.getWishlist({ page, size });
+            if (!data || typeof data !== 'object' || data.error) return;
+            const items = Array.isArray(data.content) ? data.content : (Array.isArray(data) ? data : []);
+            this._wishlistCache.clear();
+            for (const item of items) {
+                if (item && item.courseId != null) {
+                    this._wishlistCache.add(String(item.courseId));
+                }
+            }
+        } catch (e) {
+            console.warn('Wishlist preload failed:', e);
+        }
+    },
+
+    /**
      * Toggle course in wishlist (add or remove)
      * Returns { inWishlist: boolean }
      */
