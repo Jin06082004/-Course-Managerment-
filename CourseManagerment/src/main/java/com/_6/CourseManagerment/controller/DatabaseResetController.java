@@ -11,7 +11,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Database Reset and User Setup Controller
@@ -60,13 +63,13 @@ public class DatabaseResetController {
             admin.setProvider("LOCAL");
             admin.setCreatedAt(LocalDateTime.now());
             admin.setUpdatedAt(LocalDateTime.now());
-            admin.setRoles(new HashSet<>(Arrays.asList(roles.get("ADMIN"), roles.get("STUDENT"))));
+            admin.setRole(roles.get("ADMIN"));
             User savedAdmin = userRepository.save(admin);
             createdUsers.add(Map.of(
                     "id", savedAdmin.getId(),
                     "username", savedAdmin.getUsername(),
                     "email", savedAdmin.getEmail(),
-                    "roles", savedAdmin.getRoles().stream().map(Role::getName).toList()
+                    "role", savedAdmin.getRole().getName()
             ));
             log.info("Created admin user: {}", savedAdmin.getUsername());
             
@@ -80,13 +83,13 @@ public class DatabaseResetController {
             instructor.setProvider("LOCAL");
             instructor.setCreatedAt(LocalDateTime.now());
             instructor.setUpdatedAt(LocalDateTime.now());
-            instructor.setRoles(new HashSet<>(Arrays.asList(roles.get("INSTRUCTOR"), roles.get("STUDENT"))));
+            instructor.setRole(roles.get("INSTRUCTOR"));
             User savedInstructor = userRepository.save(instructor);
             createdUsers.add(Map.of(
                     "id", savedInstructor.getId(),
                     "username", savedInstructor.getUsername(),
                     "email", savedInstructor.getEmail(),
-                    "roles", savedInstructor.getRoles().stream().map(Role::getName).toList()
+                    "role", savedInstructor.getRole().getName()
             ));
             log.info("Created instructor user: {}", savedInstructor.getUsername());
             
@@ -100,13 +103,13 @@ public class DatabaseResetController {
             student1.setProvider("LOCAL");
             student1.setCreatedAt(LocalDateTime.now());
             student1.setUpdatedAt(LocalDateTime.now());
-            student1.setRoles(new HashSet<>(Collections.singletonList(roles.get("STUDENT"))));
+            student1.setRole(roles.get("STUDENT"));
             User savedStudent1 = userRepository.save(student1);
             createdUsers.add(Map.of(
                     "id", savedStudent1.getId(),
                     "username", savedStudent1.getUsername(),
                     "email", savedStudent1.getEmail(),
-                    "roles", savedStudent1.getRoles().stream().map(Role::getName).toList()
+                    "role", savedStudent1.getRole().getName()
             ));
             log.info("Created student user: {}", savedStudent1.getUsername());
             
@@ -120,13 +123,13 @@ public class DatabaseResetController {
             student2.setProvider("LOCAL");
             student2.setCreatedAt(LocalDateTime.now());
             student2.setUpdatedAt(LocalDateTime.now());
-            student2.setRoles(new HashSet<>(Collections.singletonList(roles.get("STUDENT"))));
+            student2.setRole(roles.get("STUDENT"));
             User savedStudent2 = userRepository.save(student2);
             createdUsers.add(Map.of(
                     "id", savedStudent2.getId(),
                     "username", savedStudent2.getUsername(),
                     "email", savedStudent2.getEmail(),
-                    "roles", savedStudent2.getRoles().stream().map(Role::getName).toList()
+                    "role", savedStudent2.getRole().getName()
             ));
             log.info("Created student user: {}", savedStudent2.getUsername());
             
@@ -171,7 +174,7 @@ public class DatabaseResetController {
                         "email", user.getEmail(),
                         "fullName", user.getFullName(),
                         "status", user.getStatus(),
-                        "roles", user.getRoles().stream().map(Role::getName).toList()
+                        "role", user.getRole().getName()
                 ));
             }
             

@@ -141,9 +141,7 @@ public class AuthController {
         profile.put("status", user.getStatus());
         profile.put("provider", user.getProvider());
         profile.put("createdAt", user.getCreatedAt());
-        profile.put("roles", user.getRoles().stream()
-            .map(r -> r.getName())
-            .toList());
+        profile.put("role", user.getRole().getName());
 
         return ResponseEntity.ok(profile);
     }
@@ -181,9 +179,7 @@ public class AuthController {
         profile.put("fullName", user.getFullName());
         profile.put("avatar", user.getAvatar());
         profile.put("status", user.getStatus());
-        profile.put("roles", user.getRoles().stream()
-            .map(r -> r.getName())
-            .toList());
+        profile.put("role", user.getRole().getName());
 
         return ResponseEntity.ok(profile);
     }

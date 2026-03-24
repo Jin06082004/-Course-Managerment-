@@ -8,11 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * Instructor Page Controller - Handles instructor page navigation
- * Only users with INSTRUCTOR role can access these pages
+ * Role-based access control is handled client-side via JavaScript
  */
 @Controller
 @RequestMapping("/instructor")
-@PreAuthorize("hasRole('INSTRUCTOR')")
 public class InstructorPageController {
     
     /**

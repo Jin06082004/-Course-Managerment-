@@ -12,9 +12,58 @@ window.AuthManager = {
     USER_KEY: 'userInfo',
 
     /**
+     * Decode JWT token and extract claims
+     * JWT format: header.payload.signature
+     */
+    decodeToken(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            
+            const decoded = atob(parts[1]);
+            return JSON.parse(decoded);
+        } catch (error) {
+            console.error('Error decoding token:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Get role from JWT token claims
+     * After single-role migration, extract the single role from the roles array
+     */
+    getRoleFromToken(token) {
+        const claims = this.decodeToken(token);
+        if (!claims) return null;
+        
+        // JWT contains "roles" array - get the first (and only) role
+        const rolesArray = claims.roles || [];
+        if (rolesArray.length === 0) return null;
+        
+        // Remove "ROLE_" prefix if present
+        let role = rolesArray[0];
+        if (role && role.startsWith('ROLE_')) {
+            role = role.replace('ROLE_', '');
+        }
+        
+        console.log('Role extracted from JWT token claims:', role);
+        return role;
+    },
+
+    /**
      * Save token and user info to localStorage
      */
     saveAuth(token, userInfo) {
+        // If role is not in userInfo, try to extract from JWT token
+        if (!userInfo.role) {
+            const roleFromToken = this.getRoleFromToken(token);
+            if (roleFromToken) {
+                userInfo.role = roleFromToken;
+                console.log('Extracted role from JWT token and updated userInfo:', roleFromToken);
+            }
+        }
+        
+        console.log('Saving auth with userInfo:', userInfo);
         localStorage.setItem(this.TOKEN_KEY, token);
         localStorage.setItem(this.USER_KEY, JSON.stringify(userInfo));
         this.updateNavbar(userInfo);
@@ -32,7 +81,22 @@ window.AuthManager = {
      */
     getUser() {
         const user = localStorage.getItem(this.USER_KEY);
-        return user ? JSON.parse(user) : null;
+        let userInfo = user ? JSON.parse(user) : null;
+        
+        // If user exists but role is missing, try to extract from JWT token
+        if (userInfo && !userInfo.role) {
+            const token = this.getToken();
+            if (token) {
+                const roleFromToken = this.getRoleFromToken(token);
+                if (roleFromToken) {
+                    userInfo.role = roleFromToken;
+                    // Update localStorage with extracted role
+                    localStorage.setItem(this.USER_KEY, JSON.stringify(userInfo));
+                }
+            }
+        }
+        
+        return userInfo;
     },
 
     /**
@@ -145,6 +209,46 @@ window.AuthManager = {
                 window.location.href = '/';
             }, 500);
         }
+    },
+
+    /**
+     * Check if user has a specific role
+     */
+    hasRole(role) {
+        const user = this.getUser();
+        if (!user) {
+            console.log('No user info found');
+            return false;
+        }
+        
+        const userRole = user.role || '';
+        console.log('Checking role:', role, 'User role:', userRole);
+        
+        // Check both with and without ROLE_ prefix
+        const roleToCheck = role.startsWith('ROLE_') ? role : `ROLE_${role}`;
+        const hasRole = userRole === role || userRole === roleToCheck || userRole === role.replace('ROLE_', '');
+        console.log('Role check result:', hasRole);
+        return hasRole;
+    },
+
+    /**
+     * Require specific role, redirect to login if not authenticated
+     * or redirect to home if authenticated but doesn't have role
+     */
+    requireRole(role, redirectUrl = '/login') {
+        if (!this.isAuthenticated()) {
+            window.location.href = redirectUrl;
+            return false;
+        }
+        
+        if (!this.hasRole(role)) {
+            // User is authenticated but doesn't have required role
+            alert(`You do not have ${role} permissions.`);
+            window.location.href = '/';
+            return false;
+        }
+        
+        return true;
     },
 
     /**

@@ -5,13 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Role Management - Admin Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Feather Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        // Check if user has ADMIN role before rendering page
+        // Wait for auth.js to load completely
+        function checkAdminAccess() {
+            if (window.AuthManager && window.AuthManager.requireRole) {
+                if (!window.AuthManager.requireRole('ADMIN', '/login')) {
+                    return; // Will redirect
+                }
+            } else {
+                // auth.js not loaded yet, retry
+                setTimeout(checkAdminAccess, 100);
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                checkAdminAccess();
+                if (window.feather) feather.replace();
+            });
+        } else {
+            checkAdminAccess();
+            setTimeout(() => { if (window.feather) feather.replace(); }, 100);
+        }
+    </script>
+    <style>
+        body {
+            color: #2c3e50;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50 !important;
+        }
+
+        p {
+            color: #2c3e50 !important;
+        }
+    </style>
 </head>
 <body>
     <div th:replace="fragments/navbar"></div>
     <div style="margin: 50px; text-align: center;">
         <h1>Role Management</h1>
-        <p style="color: #999;">Role management feature coming soon.</p>
+        <p>Role management feature coming soon.</p>
         <a href="/admin" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; text-decoration: none;">Back to Dashboard</a>
     </div>
+    <!-- Feather Icons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 </body>
 </html>

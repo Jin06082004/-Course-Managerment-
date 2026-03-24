@@ -337,11 +337,19 @@
                         username: data.user?.username || username,
                         email: data.user?.email,
                         fullName: data.user?.fullName,
-                        role: data.user?.role || 'STUDENT'
+                        role: data.user?.role || null
                     };
                     
-                    console.log('Login successful, saving auth:', {token: data.token, user: userInfo});
+                    console.log('API Response - User Data:', data.user);
+                    console.log('Extracted Role from API:', userInfo.role);
+                    
+                    // AuthManager.saveAuth will extract from JWT token if role is empty
                     window.AuthManager.saveAuth(data.token, userInfo);
+                    
+                    // Verify role was saved correctly
+                    const savedUser = window.AuthManager.getUser();
+                    console.log('Saved User Info:', savedUser);
+                    console.log('Final Role in localStorage:', savedUser?.role);
                     
                     // Redirect to my courses or home
                     setTimeout(() => {

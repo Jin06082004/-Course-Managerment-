@@ -499,7 +499,7 @@
                         username: username,
                         email: email,
                         fullName: fullName,
-                        role: 'STUDENT'
+                        role: data.user?.role || 'STUDENT'
                     };
 
                     console.log('Registration successful, saving auth:', { token: data.token, user: userInfo });

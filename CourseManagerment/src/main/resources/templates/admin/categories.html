@@ -5,13 +5,224 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Management - Admin Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Feather Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        // Check if user has ADMIN role before rendering page
+        // Wait for auth.js to load completely
+        function checkAdminAccess() {
+            if (window.AuthManager && window.AuthManager.requireRole) {
+                if (!window.AuthManager.requireRole('ADMIN', '/login')) {
+                    return; // Will redirect
+                }
+            } else {
+                // auth.js not loaded yet, retry
+                setTimeout(checkAdminAccess, 100);
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                checkAdminAccess();
+                if (window.feather) feather.replace();
+            });
+        } else {
+            checkAdminAccess();
+            setTimeout(() => { if (window.feather) feather.replace(); }, 100);
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #2c3e50;
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50 !important;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            gap: 0;
+        }
+        
+        .admin-sidebar {
+            background-color: #34495e;
+            color: white;
+            padding: 20px;
+            width: 250px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .admin-sidebar h3 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .admin-sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            margin: 5px 0;
+        }
+
+        .admin-sidebar a:hover, .admin-sidebar a.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .admin-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #f5f5f5;
+            overflow-y: auto;
+        }
+
+        .admin-content h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .category-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .category-card small {
+            display: block;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
     <div th:replace="fragments/navbar"></div>
-    <div style="margin: 50px; text-align: center;">
-        <h1>Category Management</h1>
-        <p style="color: #999;">Category management feature coming soon.</p>
-        <a href="/admin" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; text-decoration: none;">Back to Dashboard</a>
+    
+    <div class="admin-container">
+        <nav class="admin-sidebar">
+            <h3>Admin Panel</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li><a href="/admin">Dashboard</a></li>
+                <li><a href="/admin/users">User Management</a></li>
+                <li><a href="/admin/categories" class="active">Categories</a></li>
+                <li><a href="/admin/courses">Course Moderation</a></li>
+                <li><a href="/admin/statistics">Statistics</a></li>
+                <li><a href="/admin/settings">Settings</a></li>
+            </ul>
+        </nav>
+
+        <div class="admin-content">
+            <h1>📚 Category Management</h1>
+
+            <div class="section">
+                <h3>All Categories</h3>
+                <div class="button-group">
+                    <button onclick="alert('Add category feature coming soon')">➕ Add New Category</button>
+                    <button onclick="alert('Search feature coming soon')">🔍 Search</button>
+                </div>
+
+                <div class="category-list">
+                    <div class="category-card">
+                        <h4>Web Development</h4>
+                        <small>152 courses</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Mobile Apps</h4>
+                        <small>98 courses</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Data Science</h4>
+                        <small>76 courses</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Cloud Computing</h4>
+                        <small>54 courses</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Cybersecurity</h4>
+                        <small>42 courses</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Artificial Intelligence</h4>
+                        <small>89 courses</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 </body>
 </html>

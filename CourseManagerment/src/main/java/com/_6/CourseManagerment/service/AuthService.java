@@ -20,10 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 /**
  * Authentication Service - Handles user registration and login
  * Includes user creation, role assignment, JWT token generation
@@ -88,9 +84,7 @@ public class AuthService {
         Role role = roleRepository.findByName(roleName)
             .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
         
-        Set<Role> roles = new HashSet<>();
-        roles.add(role);
-        user.setRoles(roles);
+        user.setRole(role);
         
         // Save user to database
         User savedUser = userRepository.save(user);
@@ -171,18 +165,15 @@ public class AuthService {
      * Generate JWT token for a user
      */
     private String generateTokenForUser(User user) {
+        String roleName = user.getRole().getName();
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+        
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
             .username(user.getUsername())
             .password(user.getPassword())
-            .authorities(user.getRoles().stream()
-                .map(role -> {
-                    String roleName = role.getName();
-                    if (!roleName.startsWith("ROLE_")) {
-                        roleName = "ROLE_" + roleName;
-                    }
-                    return new org.springframework.security.core.authority.SimpleGrantedAuthority(roleName);
-                })
-                .collect(Collectors.toList()))
+            .authorities(new org.springframework.security.core.authority.SimpleGrantedAuthority(roleName))
             .build();
         
         return jwtTokenProvider.generateToken(userDetails, user.getId());
@@ -200,9 +191,7 @@ public class AuthService {
             user.getAvatar(),
             user.getStatus(),
             user.getCreatedAt(),
-            user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet())
+            user.getRole().getName()
         );
     }
 }

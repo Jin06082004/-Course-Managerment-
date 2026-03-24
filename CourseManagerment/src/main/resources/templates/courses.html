@@ -553,39 +553,38 @@
 
         document.addEventListener('DOMContentLoaded', initializePage);
 
-            // Search input
-            const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', debounce(function() {
-                currentSearch = this.value.trim();
+        // Search input
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', debounce(function() {
+            currentSearch = this.value.trim();
+            currentPage = 0;
+            loadCourses();
+        }, 400));
+
+        // Sort select
+        document.getElementById('sortSelect').addEventListener('change', function() {
+            currentSort = this.value;
+            currentPage = 0;
+            loadCourses();
+        });
+
+        // Category filter
+        document.addEventListener('change', function(e) {
+            if (e.target.name === 'category') {
+                currentCategoryId = e.target.value || null;
                 currentPage = 0;
                 loadCourses();
-            }, 400));
-
-            // Sort select
-            document.getElementById('sortSelect').addEventListener('change', function() {
-                currentSort = this.value;
+            }
+            if (e.target.name === 'level') {
+                currentLevel = e.target.value;
                 currentPage = 0;
                 loadCourses();
-            });
-
-            // Category filter
-            document.addEventListener('change', function(e) {
-                if (e.target.name === 'category') {
-                    currentCategoryId = e.target.value || null;
-                    currentPage = 0;
-                    loadCourses();
-                }
-                if (e.target.name === 'level') {
-                    currentLevel = e.target.value;
-                    currentPage = 0;
-                    loadCourses();
-                }
-                if (e.target.name === 'price') {
-                    currentPrice = e.target.value;
-                    currentPage = 0;
-                    loadCourses();
-                }
-            });
+            }
+            if (e.target.name === 'price') {
+                currentPrice = e.target.value;
+                currentPage = 0;
+                loadCourses();
+            }
         });
     </script>
 </body>

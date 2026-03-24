@@ -35,27 +35,36 @@ public class AdminController {
     private RoleRepository roleRepository;
     
     /**
-     * Get all users with pagination
+     * Get all users with pagination and filtering
+     * Supports filtering by role and searching by username/email/fullName
      */
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String role) {
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String search) {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<User> users;
             
-            if (role != null && !role.isEmpty()) {
-                // Filter by role if specified
+            // If search is provided, search by username/email/fullName
+            if (search != null && !search.isEmpty()) {
+                users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
+                        search, search, search, pageable);
+            } 
+            // If role is provided, filter by role
+            else if (role != null && !role.isEmpty()) {
                 Role roleEntity = roleRepository.findByName(role)
                         .orElse(null);
                 if (roleEntity == null) {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", "Role not found: " + role));
                 }
-                users = userRepository.findByRoles(Collections.singleton(roleEntity), pageable);
-            } else {
+                users = userRepository.findByRole(roleEntity, pageable);
+            } 
+            // Otherwise get all users
+            else {
                 users = userRepository.findAll(pageable);
             }
             
@@ -120,8 +129,7 @@ public class AdminController {
     }
     
     /**
-     * Assign role to user
-     * When assigning ROLE_ADMIN or ROLE_INSTRUCTOR, automatically removes ROLE_STUDENT
+     * Assign role to user (replaces current role)
      */
     @PostMapping("/users/{id}/roles")
     public ResponseEntity<?> assignRoleToUser(
@@ -142,32 +150,11 @@ public class AdminController {
                         .body(Map.of("error", "Role not found: " + roleName));
             }
             
-            // Check if user already has this role
-            if (user.getRoles().contains(role)) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "User already has role: " + roleName));
-            }
-            
-            // Add the new role
-            user.getRoles().add(role);
-            
-            // Auto-remove STUDENT when promoting to ADMIN or INSTRUCTOR
-            if ((roleName.equals("ADMIN") || roleName.equals("INSTRUCTOR") || 
-                    roleName.equals("ROLE_ADMIN") || roleName.equals("ROLE_INSTRUCTOR")) 
-                    && user.getRoles().size() > 1) {
-                Role studentRole = roleRepository.findByName("STUDENT")
-                        .orElse(roleRepository.findByName("ROLE_STUDENT").orElse(null));
-                if (studentRole != null && user.getRoles().contains(studentRole)) {
-                    user.getRoles().remove(studentRole);
-                    log.info("Automatically removed STUDENT role from user {} when assigning {}", 
-                            user.getUsername(), roleName);
-                }
-            }
+            // Replace the user's current role with the new one
+            user.setRole(role);
             
             userRepository.save(user);
-            log.info("Role {} assigned to user {} (remaining roles: {})", 
-                    roleName, user.getUsername(), 
-                    user.getRoles().stream().map(Role::getName).toList());
+            log.info("Role {} assigned to user {}", roleName, user.getUsername());
             
             return ResponseEntity.ok(convertToDto(user));
         } catch (Exception e) {
@@ -178,34 +165,14 @@ public class AdminController {
     }
     
     /**
-     * Remove role from user
+     * Remove role from user (not applicable for single-role system, returns error)
      */
     @DeleteMapping("/users/{id}/roles/{roleName}")
     public ResponseEntity<?> removeRoleFromUser(
             @PathVariable Long id,
             @PathVariable String roleName) {
-        try {
-            User user = userRepository.findById(id)
-                    .orElse(null);
-            if (user == null) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            Role role = roleRepository.findByName(roleName)
-                    .orElse(null);
-            if (role == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Role not found: " + roleName));
-            }
-            
-            user.getRoles().remove(role);
-            userRepository.save(user);
-            return ResponseEntity.ok(convertToDto(user));
-        } catch (Exception e) {
-            log.error("Error removing role", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Cannot remove role in single-role system. Use POST endpoint to replace role."));
     }
     
     /**
@@ -269,7 +236,7 @@ public class AdminController {
             Map<String, Object> stats = new HashMap<>();
             
             for (Role role : roles) {
-                long count = userRepository.countByRoles(Collections.singleton(role));
+                long count = userRepository.countByRole(role);
                 stats.put(role.getName(), count);
             }
             
@@ -293,9 +260,7 @@ public class AdminController {
         dto.setAvatar(user.getAvatar());
         dto.setStatus(user.getStatus());
         dto.setCreatedAt(user.getCreatedAt());
-        dto.setRoles(user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet()));
+        dto.setRole(user.getRole().getName());
         return dto;
     }
 }

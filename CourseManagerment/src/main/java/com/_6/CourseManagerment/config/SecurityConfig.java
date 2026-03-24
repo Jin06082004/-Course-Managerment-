@@ -103,30 +103,49 @@ public class SecurityConfig {
             
             // Configure URL security
             .authorizeHttpRequests(authz -> authz
-                // Public endpoints - Auth
+                // ==================
+                // PUBLIC ENDPOINTS
+                // ==================
+                // Auth endpoints (login, register, logout)
                 .requestMatchers("/api/auth/**").permitAll()
                 
-                // Public endpoints - Setup (initial admin role assignment)
+                // Setup endpoint (assign admin role)
                 .requestMatchers("/api/setup/**").permitAll()
 
-                // Public endpoints - Browsing courses
+                // Public course browsing (everyone can browse)
                 .requestMatchers("/api/courses/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
                 
-                // Admin endpoint - API
+                // ==================
+                // ADMIN ENDPOINTS
+                // ==================
+                // Admin API - user management (requires server-side authentication)
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
-                // Instructor endpoint - API
+                // Admin Pages (client-side role check only - permitAll and let JavaScript handle it)
+                
+                // ==================
+                // INSTRUCTOR ENDPOINTS
+                // ==================
+                // Instructor API - course management (requires server-side authentication)
                 .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
                 
-                // Admin pages
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Instructor Pages (client-side role check only - permitAll and let JavaScript handle it)
                 
-                // Instructor pages
-                .requestMatchers("/instructor/**").hasRole("INSTRUCTOR")
+                // ==================
+                // AUTHENTICATED USER ENDPOINTS
+                // ==================
+                // User profile and settings (any authenticated user)
+                .requestMatchers("/api/users/**").authenticated()
+                .requestMatchers("/api/profile/**").authenticated()
+                .requestMatchers("/api/wishlist/**").authenticated()
+                .requestMatchers("/api/enrollments/**").authenticated()
                 
-                // Public pages (HTML từ Thymeleaf — trình duyệt KHÔNG gửi JWT trong localStorage khi gõ URL / F5)
-                // Xác thực thật sự vẫn do JWT trên /api/** khi frontend gọi fetch + Authorization
+                // ==================
+                // PUBLIC PAGES (HTML)
+                // ==================
+                // Public pages accessible without authentication
+                // Frontend handles role-based rendering client-side
                 .requestMatchers(
                         "/",
                         "/home",
@@ -138,17 +157,26 @@ public class SecurityConfig {
                         "/profile",
                         "/settings",
                         "/wishlist",
+                        "/admin/**",
+                        "/instructor/**",
                         "/error/404",
                         "/error/500",
                         "/error"
                 ).permitAll()
                 
-                // Public assets
-                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                // ==================
+                // STATIC ASSETS
+                // ==================
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
                 
-                // Public API docs
+                // ==================
+                // API DOCUMENTATION
+                // ==================
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 
+                // ==================
+                // DEFAULT RULE
+                // ==================
                 // Any other request requires authentication
                 .anyRequest().authenticated()
             )

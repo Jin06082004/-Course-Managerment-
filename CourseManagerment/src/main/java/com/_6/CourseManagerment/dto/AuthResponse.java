@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 /**
  * DTO for authentication response (after login or register success)
@@ -42,6 +41,6 @@ public class AuthResponse {
         private String avatar;
         private String status;
         private LocalDateTime createdAt;
-        private Set<String> roles; // Role names
+        private String role; // Role name
     }
 }

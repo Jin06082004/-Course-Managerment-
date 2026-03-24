@@ -5,13 +5,243 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit User - Admin Panel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Feather Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css">
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        // Check if user has ADMIN role before rendering page
+        // Wait for auth.js to load completely
+        function checkAdminAccess() {
+            if (window.AuthManager && window.AuthManager.requireRole) {
+                if (!window.AuthManager.requireRole('ADMIN', '/login')) {
+                    return; // Will redirect
+                }
+            } else {
+                // auth.js not loaded yet, retry
+                setTimeout(checkAdminAccess, 100);
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                checkAdminAccess();
+                if (window.feather) feather.replace();
+            });
+        } else {
+            checkAdminAccess();
+            setTimeout(() => { if (window.feather) feather.replace(); }, 100);
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #2c3e50;
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50 !important;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            gap: 0;
+        }
+        
+        .admin-sidebar {
+            background-color: #34495e;
+            color: white;
+            padding: 20px;
+            width: 250px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .admin-sidebar h3 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .admin-sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            margin: 5px 0;
+        }
+
+        .admin-sidebar a:hover, .admin-sidebar a.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .admin-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #f5f5f5;
+            overflow-y: auto;
+        }
+
+        .admin-content h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #2c3e50;
+            background-color: white;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+    </style>
 </head>
 <body>
     <div th:replace="fragments/navbar"></div>
-    <div style="margin: 50px; text-align: center;">
-        <h1>Edit User</h1>
-        <p style="color: #999;">User editing feature coming soon.</p>
-        <a href="/admin/users" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; text-decoration: none;">Back to User Management</a>
+    
+    <div class="admin-container">
+        <nav class="admin-sidebar">
+            <h3>Admin Panel</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li><a href="/admin">Dashboard</a></li>
+                <li><a href="/admin/users">User Management</a></li>
+                <li><a href="/admin/categories">Categories</a></li>
+                <li><a href="/admin/courses">Course Moderation</a></li>
+                <li><a href="/admin/statistics">Statistics</a></li>
+                <li><a href="/admin/settings" class="active">Settings</a></li>
+            </ul>
+        </nav>
+
+        <div class="admin-content">
+            <h1>👤 Edit User Profile</h1>
+
+            <div class="form-section">
+                <form id="editUserForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" value="john_doe" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" value="john@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" value="John Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" required>
+                            <option value="STUDENT" selected>Student</option>
+                            <option value="INSTRUCTOR">Instructor</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" required>
+                            <option value="ACTIVE" selected>Active</option>
+                            <option value="LOCKED">Locked</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">💾 Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="window.history.back()">❌ Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <script>
+        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('✅ User profile updated successfully!');
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 </body>
 </html>

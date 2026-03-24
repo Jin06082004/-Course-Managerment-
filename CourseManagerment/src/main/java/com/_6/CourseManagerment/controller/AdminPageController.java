@@ -8,11 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * Admin Page Controller - Handles admin page navigation
- * Only users with ADMIN role can access these pages
+ * Role-based access control is handled client-side via JavaScript
  */
 @Controller
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminPageController {
     
     /**

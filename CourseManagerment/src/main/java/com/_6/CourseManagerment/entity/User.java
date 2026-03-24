@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * User Entity - Represents system users (ADMIN, INSTRUCTOR, STUDENT)
@@ -51,16 +49,12 @@ public class User {
     private LocalDateTime updatedAt;
     
     /**
-     * Many-to-Many relationship with Role
-     * Through join table: user_roles
+     * Many-to-One relationship with Role
+     * Each user has exactly one role
      */
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
     
     @PrePersist
     protected void onCreate() {

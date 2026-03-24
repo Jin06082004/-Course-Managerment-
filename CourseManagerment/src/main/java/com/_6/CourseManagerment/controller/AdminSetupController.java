@@ -9,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Admin Setup Controller - For initial admin role assignment
@@ -55,14 +53,12 @@ public class AdminSetupController {
             }
             
             // Check if already has admin role
-            if (user.getRoles().contains(adminRole)) {
+            if (user.getRole().equals(adminRole)) {
                 return ResponseEntity.ok(Map.of("message", "User already has ADMIN role"));
             }
             
-            // Add ADMIN role
-            Set<Role> roles = new HashSet<>(user.getRoles());
-            roles.add(adminRole);
-            user.setRoles(roles);
+            // Replace role with ADMIN
+            user.setRole(adminRole);
             
             userRepository.save(user);
             
@@ -70,7 +66,7 @@ public class AdminSetupController {
             return ResponseEntity.ok(Map.of(
                     "message", "ADMIN role assigned successfully",
                     "username", user.getUsername(),
-                    "roles", user.getRoles().stream().map(Role::getName).toList()
+                    "role", user.getRole().getName()
             ));
         } catch (Exception e) {
             log.error("Error assigning admin role", e);
