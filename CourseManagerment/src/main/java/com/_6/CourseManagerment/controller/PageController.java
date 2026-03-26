@@ -66,6 +66,11 @@ public class PageController {
         return "my-courses";
     }
 
+    @GetMapping("/learn/{id}")
+    public String learnCourse() {
+        return "learn-course";
+    }
+
     @GetMapping("/profile")
     public String profile() {
         return "profile";

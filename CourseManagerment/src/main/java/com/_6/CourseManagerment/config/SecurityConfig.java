@@ -145,6 +145,9 @@ public class SecurityConfig {
                 // MOMO PAYMENT CALLBACKS (phải public vì MoMo gọi trực tiếp)
                 // ==================
                 .requestMatchers("/api/payment/momo-return", "/api/payment/momo-notify").permitAll()
+
+                // Signed video stream endpoint (validated by signature + expiry + purchase)
+                .requestMatchers("/api/videos/*/stream").permitAll()
                 
                 // ==================
                 // PUBLIC PAGES (HTML)
@@ -156,6 +159,7 @@ public class SecurityConfig {
                         "/home",
                         "/courses",
                         "/courses/**",
+                        "/learn/**",
                         "/login",
                         "/register",
                         "/my-courses",

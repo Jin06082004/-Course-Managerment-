@@ -16,22 +16,22 @@ import java.util.*;
 @Slf4j
 public class MoMoPaymentService {
 
-    @Value("${momo.partner-code}")
+    @Value("${momo.partner-code:}")
     private String partnerCode;
 
-    @Value("${momo.access-key}")
+    @Value("${momo.access-key:}")
     private String accessKey;
 
-    @Value("${momo.secret-key}")
+    @Value("${momo.secret-key:}")
     private String secretKey;
 
-    @Value("${momo.endpoint}")
+    @Value("${momo.endpoint:}")
     private String endpoint;
 
-    @Value("${momo.return-url}")
+    @Value("${momo.return-url:}")
     private String returnUrl;
 
-    @Value("${momo.notify-url}")
+    @Value("${momo.notify-url:}")
     private String notifyUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -45,6 +45,10 @@ public class MoMoPaymentService {
      * @return payUrl - URL chuyển hướng người dùng đến trang thanh toán MoMo
      */
     public String createPayment(String orderId, long amount, String orderInfo) {
+        if (!isConfigured()) {
+            throw new RuntimeException("MoMo chưa được cấu hình. Vui lòng thiết lập momo.partner-code, momo.access-key, momo.secret-key, momo.endpoint, momo.return-url, momo.notify-url");
+        }
+
         String requestId = UUID.randomUUID().toString();
         String requestType = "captureWallet";
         String extraData = ""; // Dữ liệu bổ sung (base64 encoded nếu cần)
@@ -129,6 +133,11 @@ public class MoMoPaymentService {
      * @return true nếu chữ ký hợp lệ, false nếu không khớp
      */
     public boolean verifyIpnSignature(Map<String, String> params) {
+        if (!isConfigured()) {
+            log.warn("Bỏ qua verify IPN vì MoMo chưa được cấu hình");
+            return false;
+        }
+
         String receivedSignature = params.get("signature");
         if (receivedSignature == null || receivedSignature.isBlank()) {
             log.warn("IPN thiếu signature");
@@ -157,5 +166,18 @@ public class MoMoPaymentService {
             log.warn("MoMo IPN signature không khớp! orderId={}", params.get("orderId"));
         }
         return valid;
+    }
+
+    public boolean isConfigured() {
+        return notBlank(partnerCode)
+                && notBlank(accessKey)
+                && notBlank(secretKey)
+                && notBlank(endpoint)
+                && notBlank(returnUrl)
+                && notBlank(notifyUrl);
+    }
+
+    private boolean notBlank(String value) {
+        return value != null && !value.isBlank();
     }
 }

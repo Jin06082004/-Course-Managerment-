@@ -2,6 +2,8 @@ package com._6.CourseManagerment.controller;
 
 import com._6.CourseManagerment.dto.CourseDto;
 import com._6.CourseManagerment.dto.CreateCourseRequest;
+import com._6.CourseManagerment.dto.CreateResourceRequest;
+import com._6.CourseManagerment.dto.ResourceDto;
 import com._6.CourseManagerment.entity.Category;
 import com._6.CourseManagerment.entity.Course;
 import com._6.CourseManagerment.entity.Enrollment;
@@ -12,6 +14,7 @@ import com._6.CourseManagerment.repository.EnrollmentRepository;
 import com._6.CourseManagerment.repository.UserRepository;
 import com._6.CourseManagerment.security.SecurityUtils;
 import com._6.CourseManagerment.service.CourseService;
+import com._6.CourseManagerment.service.ResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -55,6 +58,9 @@ public class InstructorController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ResourceService resourceService;
 
     private User getCurrentInstructor(Authentication auth) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -151,6 +157,29 @@ public class InstructorController {
             return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
         } catch (Exception e) {
             log.error("Error creating course", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Add a resource link to an owned course
+     */
+    @PostMapping("/resources")
+    public ResponseEntity<?> addResource(
+            @Valid @RequestBody CreateResourceRequest request,
+            Authentication auth) {
+        try {
+            User instructor = getCurrentInstructor(auth);
+            if (instructor == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not found"));
+            }
+
+            ResourceDto created = resourceService.addResource(request, instructor.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            log.error("Error adding resource", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         }

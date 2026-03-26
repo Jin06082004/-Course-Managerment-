@@ -77,6 +77,13 @@ const ApiService = {
     },
 
     /**
+     * Get downloadable resources for a purchased course
+     */
+    async getCourseResources(courseId) {
+        return this.fetch(`/courses/${courseId}/resources`);
+    },
+
+    /**
      * Get courses by category
      */
     async getCoursesByCategory(categoryId, { page = 0, size = 12 } = {}) {
@@ -182,6 +189,125 @@ const ApiService = {
      */
     async completeEnrollment(enrollmentId) {
         return this.fetch(`/enrollments/${enrollmentId}/complete`, { method: 'PUT' });
+    },
+
+    // =====================
+    // RESOURCES
+    // =====================
+
+    /**
+     * Instructor adds a resource to a course
+     */
+    async addInstructorResource({ title, url, courseId }) {
+        return this.fetch('/instructor/resources', {
+            method: 'POST',
+            body: JSON.stringify({ title, url, courseId }),
+        });
+    },
+
+    /**
+     * Delete a resource by ID (instructor owner or admin)
+     */
+    async deleteResource(resourceId) {
+        return this.fetch(`/resources/${resourceId}`, { method: 'DELETE' });
+    },
+
+    // =====================
+    // COMMENTS & Q&A
+    // =====================
+
+    /**
+     * Get comments for a lesson
+     */
+    async getLessonComments(lessonId) {
+        return this.fetch(`/lessons/${lessonId}/comments`);
+    },
+
+    /**
+     * Create a new top-level comment
+     */
+    async createComment({ lessonId, content }) {
+        return this.fetch('/comments', {
+            method: 'POST',
+            body: JSON.stringify({ lessonId, content }),
+        });
+    },
+
+    /**
+     * Reply to an existing comment
+     */
+    async replyComment(commentId, content) {
+        return this.fetch(`/comments/${commentId}/reply`, {
+            method: 'POST',
+            body: JSON.stringify({ content }),
+        });
+    },
+
+    /**
+     * Toggle like for a comment
+     */
+    async likeComment(commentId) {
+        return this.fetch(`/comments/${commentId}/like`, { method: 'POST' });
+    },
+
+    /**
+     * Delete a comment
+     */
+    async deleteComment(commentId) {
+        return this.fetch(`/comments/${commentId}`, { method: 'DELETE' });
+    },
+
+    // =====================
+    // QUIZ
+    // =====================
+
+    /**
+     * Get quiz for a lesson
+     */
+    async getLessonQuiz(lessonId) {
+        return this.fetch(`/lessons/${lessonId}/quiz`);
+    },
+
+    /**
+     * Submit quiz answers
+     */
+    async submitQuiz({ lessonId, answers }) {
+        return this.fetch('/quiz/submit', {
+            method: 'POST',
+            body: JSON.stringify({ lessonId, answers }),
+        });
+    },
+
+    // =====================
+    // VIDEO SECURITY
+    // =====================
+
+    /**
+     * Get signed secure video URL for a purchased lesson
+     */
+    async getSecureVideoUrl(videoId) {
+        return this.fetch(`/videos/${videoId}/secure-url`);
+    },
+
+    // =====================
+    // VIDEO PROGRESS
+    // =====================
+
+    /**
+     * Save lesson watch progress
+     */
+    async saveProgress({ lessonId, currentTime }) {
+        return this.fetch('/progress', {
+            method: 'POST',
+            body: JSON.stringify({ lessonId, currentTime }),
+        });
+    },
+
+    /**
+     * Get lesson watch progress
+     */
+    async getProgress(lessonId) {
+        return this.fetch(`/progress/${lessonId}`);
     },
 
     // =====================

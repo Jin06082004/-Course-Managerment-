@@ -3,8 +3,10 @@ package com._6.CourseManagerment.controller;
 import com._6.CourseManagerment.dto.CourseDto;
 import com._6.CourseManagerment.dto.CreateCourseRequest;
 import com._6.CourseManagerment.dto.PageResponse;
+import com._6.CourseManagerment.dto.ResourceDto;
 import com._6.CourseManagerment.security.SecurityUtils;
 import com._6.CourseManagerment.service.CourseService;
+import com._6.CourseManagerment.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,9 @@ public class CourseController {
     
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private ResourceService resourceService;
     
     /**
      * Get all courses with pagination
@@ -62,6 +67,16 @@ public class CourseController {
                         put("error", e.getMessage());
                     }});
         }
+    }
+
+    /**
+     * Get course resources for purchased users only
+     */
+    @GetMapping("/{id}/resources")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ResourceDto>> getCourseResources(@PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(resourceService.getCourseResourcesForUser(id, userId));
     }
     
     /**

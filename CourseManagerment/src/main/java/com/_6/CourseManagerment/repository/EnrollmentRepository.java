@@ -35,6 +35,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     
     // Check if user enrolled in course
     Boolean existsByUser_IdAndCourse_Id(Long userId, Long courseId);
+
+    // Check if user has purchased access (paid or free enrollment)
+    @Query("SELECT COUNT(e) > 0 FROM Enrollment e WHERE e.user.id = :userId AND e.course.id = :courseId AND e.paymentStatus IN ('PAID', 'FREE') AND e.status IN ('ENROLLED', 'IN_PROGRESS', 'COMPLETED')")
+    Boolean existsPurchasedAccess(@Param("userId") Long userId, @Param("courseId") Long courseId);
     
     // Tìm enrollment theo orderId (liên kết với MoMo payment)
     Optional<Enrollment> findByOrderId(String orderId);

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning | CourseManager</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .learn-page {
+            min-height: 100vh;
+            padding: var(--spacing-xl) var(--spacing-lg);
+            background: linear-gradient(140deg, rgba(255, 107, 53, 0.1), rgba(124, 58, 237, 0.06));
+        }
+
+        .learn-container {
+            max-width: 1080px;
+            margin: 0 auto;
+            display: grid;
+            gap: var(--spacing-xl);
+        }
+
+        .learn-hero,
+        .video-card,
+        .quiz-card,
+        .comments-card,
+        .resources-card,
+        .access-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+        }
+
+        .video-frame {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: none;
+            border-radius: var(--radius-md);
+            background: #000;
+        }
+
+        .quiz-lock {
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            color: var(--text-secondary);
+            background: var(--bg-hover);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .quiz-question {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            background: var(--bg-hover);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .quiz-question-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .quiz-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: var(--text-primary);
+            margin: 6px 0;
+        }
+
+        .quiz-submit-btn {
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-primary);
+            color: #fff;
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .quiz-submit-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .quiz-result {
+            margin-top: var(--spacing-md);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-md);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .comment-input-wrap {
+            display: grid;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .comment-input {
+            width: 100%;
+            min-height: 80px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            padding: var(--spacing-md);
+            resize: vertical;
+        }
+
+        .comment-action-btn {
+            justify-self: end;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-primary);
+            color: #fff;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .comment-list {
+            margin-top: var(--spacing-lg);
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+
+        .comment-item {
+            display: grid;
+            gap: var(--spacing-sm);
+        }
+
+        .comment-head {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: baseline;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .comment-user {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .comment-content {
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .comment-tools {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .text-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 4px;
+        }
+
+        .text-btn:hover {
+            color: var(--accent-primary);
+        }
+
+        .reply-box {
+            margin-left: 24px;
+            border-left: 2px solid var(--border-color);
+            padding-left: var(--spacing-md);
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .reply-input {
+            width: 100%;
+            min-height: 60px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            padding: var(--spacing-sm);
+            resize: vertical;
+        }
+
+        .course-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+
+        .course-meta {
+            color: var(--text-secondary);
+            display: flex;
+            gap: var(--spacing-lg);
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .resource-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .resource-item {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-hover);
+            padding: var(--spacing-md) var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+        }
+
+        .resource-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .resource-link {
+            color: var(--accent-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .resource-link:hover {
+            text-decoration: underline;
+        }
+
+        .hint {
+            color: var(--text-secondary);
+            margin-top: var(--spacing-sm);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .course-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<th:block th:insert="~{fragments/navbar :: navbar}"></th:block>
+
+<div class="learn-page">
+    <div class="learn-container">
+        <section class="learn-hero">
+            <h1 class="course-title" id="courseTitle">Loading course...</h1>
+            <div class="course-meta">
+                <span id="courseLevel">Level</span>
+                <span id="courseDuration">Duration</span>
+            </div>
+            <p id="courseDescription" class="hint">Preparing your learning page...</p>
+        </section>
+
+        <section class="video-card">
+            <h2>Lesson Video</h2>
+            <video id="lessonVideo" class="video-frame" controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsinline></video>
+            <p id="videoHint" class="hint">Video will appear here when available.</p>
+        </section>
+
+        <section class="quiz-card hidden" id="quizSection">
+            <h2>Lesson Quiz</h2>
+            <p class="hint">Complete this quiz to check your understanding.</p>
+            <div id="quizLock" class="quiz-lock">Watch the lesson video to unlock the quiz.</div>
+            <div id="quizContainer"></div>
+            <button id="quizSubmitBtn" class="quiz-submit-btn" onclick="submitQuiz()" disabled>Submit Quiz</button>
+            <div id="quizResult" class="quiz-result hidden"></div>
+        </section>
+
+        <section class="comments-card hidden" id="commentsSection">
+            <h2>Q&A & Comments</h2>
+            <p class="hint">Ask questions or share tips like a YouTube discussion thread.</p>
+
+            <div class="comment-input-wrap">
+                <textarea id="newCommentInput" class="comment-input" placeholder="Add a public comment..."></textarea>
+                <button class="comment-action-btn" id="postCommentBtn" onclick="postComment()">Comment</button>
+            </div>
+
+            <div id="commentList" class="comment-list"></div>
+        </section>
+
+        <section class="resources-card hidden" id="resourcesSection">
+            <h2>Resources</h2>
+            <p class="hint">Download supporting files for this course.</p>
+            <ul class="resource-list" id="resourceList"></ul>
+            <p class="hint hidden" id="resourceEmpty">No resources available for this course yet.</p>
+        </section>
+
+        <section class="access-card hidden" id="noAccessSection">
+            <h2>Resources Locked</h2>
+            <p class="hint">You need to purchase this course to access downloadable resources.</p>
+        </section>
+    </div>
+</div>
+
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/toast.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script>
+    var activeLessonId = null;
+    var commentsData = [];
+    var quizData = null;
+    var quizUnlocked = false;
+    var hlsPlayer = null;
+    var maxWatchedSeconds = 0;
+    var antiSkipEnabled = false;
+    var allowedTime = 0;
+    var isRestoringProgress = false;
+    var lastProgressSavedAt = 0;
+
+    function getCourseIdFromUrl() {
+        var parts = window.location.pathname.split('/');
+        return parts[parts.length - 1];
+    }
+
+    function formatTime(value) {
+        if (!value) return 'just now';
+        var date = new Date(value);
+        var minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+        if (minutes < 1) return 'just now';
+        if (minutes < 60) return minutes + 'm ago';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h ago';
+        var days = Math.floor(hours / 24);
+        return days + 'd ago';
+    }
+
+    function isHlsUrl(url) {
+        return !!url && url.toLowerCase().indexOf('.m3u8') !== -1;
+    }
+
+    function setQuizUnlockState(unlocked, message) {
+        quizUnlocked = unlocked;
+        var lock = document.getElementById('quizLock');
+        var submitBtn = document.getElementById('quizSubmitBtn');
+        if (!lock || !submitBtn) return;
+
+        if (unlocked) {
+            lock.classList.add('hidden');
+            submitBtn.disabled = false;
+        } else {
+            lock.classList.remove('hidden');
+            lock.textContent = message || 'Watch the lesson video to unlock the quiz.';
+            submitBtn.disabled = true;
+        }
+    }
+
+    function installVideoGuards(videoEl) {
+        if (!videoEl) return;
+
+        videoEl.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        videoEl.addEventListener('timeupdate', function() {
+            if (!activeLessonId) return;
+            if (videoEl.currentTime > maxWatchedSeconds) {
+                maxWatchedSeconds = videoEl.currentTime;
+                allowedTime = maxWatchedSeconds;
+            }
+
+            maybeSaveProgress(videoEl);
+        });
+
+        // Basic anti-skip: block jumping too far ahead before completion.
+        videoEl.addEventListener('seeking', function() {
+            if (!antiSkipEnabled) return;
+            if (isRestoringProgress) return;
+
+            var newTime = videoEl.currentTime;
+            if (newTime > allowedTime + 1) {
+                videoEl.currentTime = allowedTime;
+            }
+        });
+
+        videoEl.addEventListener('pause', function() {
+            maybeSaveProgress(videoEl, true);
+        });
+
+        videoEl.addEventListener('ended', function() {
+            antiSkipEnabled = false;
+            allowedTime = videoEl.duration || allowedTime;
+            maybeSaveProgress(videoEl, true);
+            setQuizUnlockState(true, 'Quiz unlocked.');
+        });
+    }
+
+    async function loadSavedProgress(videoEl) {
+        if (!videoEl || !activeLessonId) return;
+
+        try {
+            var progress = await ApiService.getProgress(activeLessonId);
+            var saved = progress && progress.lastWatchedTime ? Number(progress.lastWatchedTime) : 0;
+
+            if (saved > 0) {
+                isRestoringProgress = true;
+                var seekTo = Math.max(0, saved - 0.5);
+                videoEl.currentTime = seekTo;
+                maxWatchedSeconds = seekTo;
+                allowedTime = seekTo;
+
+                setTimeout(function() {
+                    isRestoringProgress = false;
+                }, 400);
+
+                var hint = document.getElementById('videoHint');
+                if (hint) {
+                    hint.textContent = 'Resumed from ' + Math.floor(seekTo) + 's. Protected stream enabled.';
+                }
+            }
+        } catch (e) {
+            // Keep default start position if progress is unavailable.
+        }
+    }
+
+    function maybeSaveProgress(videoEl, force) {
+        if (!videoEl || !activeLessonId) return;
+
+        var now = Date.now();
+        if (!force && now - lastProgressSavedAt < 5000) {
+            return;
+        }
+
+        lastProgressSavedAt = now;
+        var current = Math.max(0, videoEl.currentTime || 0);
+
+        ApiService.saveProgress({
+            lessonId: activeLessonId,
+            currentTime: current,
+        }).catch(function() {
+            // Ignore transient save failures to avoid interrupting playback.
+        });
+    }
+
+    function attachVideoSource(videoEl, secureUrl, streamType) {
+        if (!videoEl || !secureUrl) return;
+
+        if (hlsPlayer) {
+            hlsPlayer.destroy();
+            hlsPlayer = null;
+        }
+
+        if ((streamType === 'hls' || isHlsUrl(secureUrl)) && window.Hls && window.Hls.isSupported()) {
+            hlsPlayer = new window.Hls({
+                enableWorker: true,
+                lowLatencyMode: false,
+            });
+            hlsPlayer.loadSource(secureUrl);
+            hlsPlayer.attachMedia(videoEl);
+            return;
+        }
+
+        if ((streamType === 'hls' || isHlsUrl(secureUrl)) && videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+            videoEl.src = secureUrl;
+            return;
+        }
+
+        videoEl.src = secureUrl;
+    }
+
+    function renderQuiz() {
+        var container = document.getElementById('quizContainer');
+        var section = document.getElementById('quizSection');
+        var result = document.getElementById('quizResult');
+        if (!container || !section) return;
+
+        result.classList.add('hidden');
+        result.innerHTML = '';
+
+        if (!quizData || !quizData.questions || quizData.questions.length === 0) {
+            section.classList.remove('hidden');
+            container.innerHTML = '<p class="hint">No quiz configured for this lesson yet.</p>';
+            document.getElementById('quizSubmitBtn').classList.add('hidden');
+            document.getElementById('quizLock').classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('quizSubmitBtn').classList.remove('hidden');
+        section.classList.remove('hidden');
+
+        var html = '<h3 style="margin-bottom:12px;">' + escapeHtml(quizData.title || 'Quiz') + '</h3>';
+        for (var i = 0; i < quizData.questions.length; i++) {
+            var q = quizData.questions[i];
+            html += '<div class="quiz-question">';
+            html += '<div class="quiz-question-title">Q' + (i + 1) + '. ' + escapeHtml(q.content) + '</div>';
+            for (var j = 0; j < (q.options || []).length; j++) {
+                var option = q.options[j];
+                html += '<label class="quiz-option">';
+                html += '<input type="radio" name="quiz-' + q.id + '" value="' + escapeHtml(option) + '">';
+                html += '<span>' + escapeHtml(option) + '</span>';
+                html += '</label>';
+            }
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    async function loadQuiz() {
+        if (!activeLessonId) return;
+
+        try {
+            quizData = await ApiService.getLessonQuiz(activeLessonId);
+            renderQuiz();
+        } catch (e) {
+            // No quiz for this lesson is acceptable
+            quizData = null;
+            renderQuiz();
+        }
+    }
+
+    async function submitQuiz() {
+        if (!quizUnlocked) {
+            if (window.ToastManager) window.ToastManager.warning('Please finish the lesson video first.');
+            return;
+        }
+
+        if (!quizData || !quizData.questions) return;
+
+        var answers = [];
+        for (var i = 0; i < quizData.questions.length; i++) {
+            var q = quizData.questions[i];
+            var selected = document.querySelector('input[name="quiz-' + q.id + '"]:checked');
+            if (selected) {
+                answers.push({ questionId: q.id, selectedAnswer: selected.value });
+            }
+        }
+
+        try {
+            var result = await ApiService.submitQuiz({ lessonId: activeLessonId, answers: answers });
+            var box = document.getElementById('quizResult');
+            var html = '';
+            html += '<div><strong>Score: ' + result.score + '%</strong> (' + result.correctCount + '/' + result.totalQuestions + ' correct)</div>';
+            html += '<div style="margin-top:8px;">';
+            for (var i = 0; i < (result.answerResults || []).length; i++) {
+                var item = result.answerResults[i];
+                html += '<div style="margin:6px 0;">Q' + (i + 1) + ': ';
+                html += item.correct ? '<span style="color:#10b981;">Correct</span>' : '<span style="color:#ef4444;">Wrong</span>';
+                html += ' - Correct answer: <strong>' + escapeHtml(item.correctAnswer || '') + '</strong>';
+                html += '</div>';
+            }
+            html += '</div>';
+            box.innerHTML = html;
+            box.classList.remove('hidden');
+        } catch (e) {
+            if (window.ToastManager) window.ToastManager.error('Unable to submit quiz.');
+        }
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    function renderSingleComment(comment, isReply) {
+        var replies = comment.replies || [];
+        var replyFormId = 'reply-form-' + comment.id;
+        var canDelete = window.AuthManager && window.AuthManager.getUser && window.AuthManager.getUser() &&
+            window.AuthManager.getUser().id === comment.userId;
+
+        var html = '';
+        html += '<div class="comment-item' + (isReply ? ' reply-box' : '') + '">';
+        html += '<div class="comment-head"><span class="comment-user">@' + escapeHtml(comment.username || ('User ' + comment.userId)) + '</span>';
+        html += '<span>' + formatTime(comment.createdAt) + '</span></div>';
+        html += '<div class="comment-content">' + escapeHtml(comment.content) + '</div>';
+        html += '<div class="comment-tools">';
+        html += '<button class="text-btn" onclick="toggleLike(' + comment.id + ')">👍 ' + (comment.likeCount || 0) + (comment.liked ? ' Liked' : '') + '</button>';
+        html += '<button class="text-btn" onclick="toggleReplyForm(' + comment.id + ')">Reply</button>';
+        if (canDelete) {
+            html += '<button class="text-btn" onclick="deleteComment(' + comment.id + ')">Delete</button>';
+        }
+        html += '</div>';
+
+        html += '<div id="' + replyFormId + '" class="hidden">';
+        html += '<textarea class="reply-input" id="reply-input-' + comment.id + '" placeholder="Write a reply..."></textarea>';
+        html += '<button class="comment-action-btn" onclick="submitReply(' + comment.id + ')">Reply</button>';
+        html += '</div>';
+
+        if (replies.length > 0) {
+            for (var i = 0; i < replies.length; i++) {
+                html += renderSingleComment(replies[i], true);
+            }
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    function renderComments() {
+        var list = document.getElementById('commentList');
+        if (!commentsData || commentsData.length === 0) {
+            list.innerHTML = '<p class="hint">No comments yet. Be the first to start the discussion.</p>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < commentsData.length; i++) {
+            html += renderSingleComment(commentsData[i], false);
+        }
+        list.innerHTML = html;
+    }
+
+    function toggleReplyForm(commentId) {
+        var el = document.getElementById('reply-form-' + commentId);
+        if (!el) return;
+        el.classList.toggle('hidden');
+    }
+
+    async function refreshComments() {
+        if (!activeLessonId) return;
+        commentsData = await ApiService.getLessonComments(activeLessonId);
+        renderComments();
+    }
+
+    async function postComment() {
+        var input = document.getElementById('newCommentInput');
+        var btn = document.getElementById('postCommentBtn');
+        var content = (input.value || '').trim();
+        if (!content) return;
+
+        btn.disabled = true;
+        try {
+            await ApiService.createComment({ lessonId: activeLessonId, content: content });
+            input.value = '';
+            await refreshComments();
+        } catch (e) {
+            if (window.ToastManager) window.ToastManager.error('Cannot post comment.');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function submitReply(commentId) {
+        var input = document.getElementById('reply-input-' + commentId);
+        var content = input ? input.value.trim() : '';
+        if (!content) return;
+
+        try {
+            await ApiService.replyComment(commentId, content);
+            await refreshComments();
+        } catch (e) {
+            if (window.ToastManager) window.ToastManager.error('Cannot post reply.');
+        }
+    }
+
+    async function toggleLike(commentId) {
+        try {
+            await ApiService.likeComment(commentId);
+            await refreshComments();
+        } catch (e) {
+            if (window.ToastManager) window.ToastManager.error('Cannot like comment.');
+        }
+    }
+
+    async function deleteComment(commentId) {
+        if (!confirm('Delete this comment?')) return;
+        try {
+            await ApiService.deleteComment(commentId);
+            await refreshComments();
+        } catch (e) {
+            if (window.ToastManager) window.ToastManager.error('Cannot delete comment.');
+        }
+    }
+
+    function renderResources(resources) {
+        var section = document.getElementById('resourcesSection');
+        var list = document.getElementById('resourceList');
+        var empty = document.getElementById('resourceEmpty');
+        list.innerHTML = '';
+
+        if (!resources || resources.length === 0) {
+            empty.classList.remove('hidden');
+        } else {
+            empty.classList.add('hidden');
+            for (var i = 0; i < resources.length; i++) {
+                var item = resources[i];
+                var li = document.createElement('li');
+                li.className = 'resource-item';
+                li.innerHTML =
+                    '<span class="resource-title">' + (item.title || 'Untitled resource') + '</span>' +
+                    '<a class="resource-link" href="' + item.url + '" target="_blank" rel="noopener noreferrer">Download</a>';
+                list.appendChild(li);
+            }
+        }
+
+        section.classList.remove('hidden');
+    }
+
+    function showNoAccess() {
+        document.getElementById('quizSection').classList.add('hidden');
+        document.getElementById('commentsSection').classList.add('hidden');
+        document.getElementById('resourcesSection').classList.add('hidden');
+        document.getElementById('noAccessSection').classList.remove('hidden');
+    }
+
+    async function loadLearningPage() {
+        var courseId = getCourseIdFromUrl();
+        var token = window.AuthManager && window.AuthManager.getToken && window.AuthManager.getToken();
+
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        if (!token) {
+            window.location.href = '/login?redirect=/learn/' + courseId;
+            return;
+        }
+
+        try {
+            var course = await ApiService.getCourse(courseId);
+            if (course && !course.error) {
+                document.getElementById('courseTitle').textContent = course.title || 'Course';
+                document.getElementById('courseLevel').textContent = course.level || 'All levels';
+                document.getElementById('courseDuration').textContent = (course.duration || 0) + ' hours';
+                document.getElementById('courseDescription').textContent = course.description || 'Start learning and track your progress.';
+                var player = document.getElementById('lessonVideo');
+                var hint = document.getElementById('videoHint');
+                installVideoGuards(player);
+
+                window.addEventListener('beforeunload', function() {
+                    maybeSaveProgress(player, true);
+                });
+
+                var securePayload = await ApiService.getSecureVideoUrl(courseId);
+                if (securePayload && securePayload.secureUrl) {
+                    maxWatchedSeconds = 0;
+                    allowedTime = 0;
+                    antiSkipEnabled = true;
+                    setQuizUnlockState(false, 'Finish the video to unlock the quiz.');
+
+                    activeLessonId = Number(courseId);
+
+                    player.addEventListener('loadedmetadata', function onMetaLoaded() {
+                        player.removeEventListener('loadedmetadata', onMetaLoaded);
+                        loadSavedProgress(player);
+                    });
+
+                    attachVideoSource(player, securePayload.secureUrl, securePayload.streamType);
+                    hint.textContent = 'Protected stream enabled. Download controls are limited.';
+                } else {
+                    player.style.display = 'none';
+                    hint.textContent = 'This lesson video is unavailable.';
+                    setQuizUnlockState(true, 'Quiz unlocked.');
+                }
+            }
+
+            var enrollment = await ApiService.checkEnrollment(courseId);
+            var hasPurchased = enrollment && enrollment.enrolled && (enrollment.paymentStatus === 'PAID' || enrollment.paymentStatus === 'FREE');
+
+            if (!hasPurchased) {
+                showNoAccess();
+                return;
+            }
+
+            activeLessonId = Number(courseId);
+            await loadQuiz();
+            document.getElementById('commentsSection').classList.remove('hidden');
+            await refreshComments();
+
+            var resources = await ApiService.getCourseResources(courseId);
+            renderResources(Array.isArray(resources) ? resources : []);
+        } catch (error) {
+            showNoAccess();
+            if (window.ToastManager) {
+                window.ToastManager.error('Unable to load learning resources.');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLearningPage);
+</script>
+</body>
+</html>
