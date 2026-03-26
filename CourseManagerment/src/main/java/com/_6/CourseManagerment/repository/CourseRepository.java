@@ -60,4 +60,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     // Find top ratings
     @Query("SELECT c FROM Course c WHERE c.status = 'PUBLISHED' ORDER BY c.rating DESC")
     Page<Course> findTopRated(Pageable pageable);
+
+    // Count by status
+    long countByStatus(String status);
 }

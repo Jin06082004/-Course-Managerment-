@@ -242,6 +242,29 @@ public class CourseController {
     /**
      * Helper method to extract user ID from authentication
      */
+    /**
+     * Get public platform statistics (no auth required)
+     */
+    @GetMapping("/stats/public")
+    public ResponseEntity<?> getPublicStats() {
+        try {
+            long totalCourses = courseService.getTotalPublishedCourses();
+            long totalStudents = courseService.getTotalStudents();
+            long totalInstructors = courseService.getTotalInstructors();
+
+            HashMap<String, Object> stats = new HashMap<>();
+            stats.put("totalCourses", totalCourses);
+            stats.put("totalStudents", totalStudents);
+            stats.put("totalInstructors", totalInstructors);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
+        }
+    }
+
     private Long extractUserIdFromAuth(Authentication authentication) {
         Long userId = SecurityUtils.getCurrentUserId();
         return userId != null ? userId : 1L;

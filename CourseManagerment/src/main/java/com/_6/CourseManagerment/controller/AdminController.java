@@ -304,6 +304,85 @@ public class AdminController {
     }
     
     /**
+     * Get all courses for admin moderation with pagination
+     */
+    @GetMapping("/courses")
+    public ResponseEntity<?> getAllCoursesForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<com._6.CourseManagerment.entity.Course> courses;
+
+            if (search != null && !search.trim().isEmpty()) {
+                courses = courseRepository.findByTitleContainingIgnoreCase(search.trim(), pageable);
+            } else if (status != null && !status.trim().isEmpty()) {
+                courses = courseRepository.findByStatus(status.trim(), pageable);
+            } else {
+                courses = courseRepository.findAll(pageable);
+            }
+
+            Page<Map<String, Object>> result = courses.map(course -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", course.getId());
+                map.put("title", course.getTitle());
+                map.put("status", course.getStatus());
+                map.put("level", course.getLevel());
+                map.put("price", course.getPrice());
+                map.put("studentCount", course.getStudentCount());
+                map.put("createdAt", course.getCreatedAt());
+                map.put("instructorName", course.getInstructor() != null ? course.getInstructor().getFullName() : "Unknown");
+                map.put("categoryName", course.getCategory() != null ? course.getCategory().getName() : "Unknown");
+                return map;
+            });
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error fetching courses for admin", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Update course status (approve/reject/archive)
+     */
+    @Transactional
+    @PutMapping("/courses/{id}/status")
+    public ResponseEntity<?> updateCourseStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String status = request.get("status");
+            if (status == null || (!status.equals("PUBLISHED") && !status.equals("REJECTED") && !status.equals("DRAFT") && !status.equals("ARCHIVED"))) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Invalid status. Must be PUBLISHED, REJECTED, DRAFT, or ARCHIVED"));
+            }
+
+            com._6.CourseManagerment.entity.Course course = courseRepository.findById(id).orElse(null);
+            if (course == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            course.setStatus(status);
+            courseRepository.save(course);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", course.getId());
+            result.put("title", course.getTitle());
+            result.put("status", course.getStatus());
+            result.put("message", "Course status updated to " + status);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error updating course status", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * Get comprehensive platform statistics
      */
     @GetMapping("/statistics/overview")
@@ -315,9 +394,15 @@ public class AdminController {
 
             Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
             Role instructorRole = roleRepository.findByName("INSTRUCTOR").orElse(null);
+            Role studentRole = roleRepository.findByName("STUDENT").orElse(null);
 
             long adminCount = adminRole != null ? userRepository.countByRoleIdNative(adminRole.getId()) : 0;
             long instructorCount = instructorRole != null ? userRepository.countByRoleIdNative(instructorRole.getId()) : 0;
+            long studentCount = studentRole != null ? userRepository.countByRoleIdNative(studentRole.getId()) : 0;
+
+            long publishedCourses = courseRepository.countByStatus("PUBLISHED");
+            long draftCourses = courseRepository.countByStatus("DRAFT");
+            long archivedCourses = courseRepository.countByStatus("ARCHIVED");
 
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalUsers", totalUsers);
@@ -325,10 +410,39 @@ public class AdminController {
             stats.put("totalEnrollments", totalEnrollments);
             stats.put("adminCount", adminCount);
             stats.put("instructorCount", instructorCount);
+            stats.put("studentCount", studentCount);
+            stats.put("publishedCourses", publishedCourses);
+            stats.put("draftCourses", draftCourses);
+            stats.put("archivedCourses", archivedCourses);
 
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             log.error("Error fetching overview statistics", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get top courses by student count
+     */
+    @GetMapping("/statistics/top-courses")
+    public ResponseEntity<?> getTopCourses() {
+        try {
+            Pageable top5 = PageRequest.of(0, 5);
+            List<com._6.CourseManagerment.entity.Course> courses = courseRepository.findFeaturedCourses(top5);
+            List<Map<String, Object>> result = courses.stream().map(c -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", c.getId());
+                m.put("title", c.getTitle());
+                m.put("studentCount", c.getStudentCount() != null ? c.getStudentCount() : 0);
+                m.put("rating", c.getRating() != null ? c.getRating() : 0);
+                m.put("instructorName", c.getInstructor() != null ? c.getInstructor().getFullName() : "Unknown");
+                return m;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error fetching top courses", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }

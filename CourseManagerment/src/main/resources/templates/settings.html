@@ -451,12 +451,38 @@
             }
         }
 
-        function handleDeleteAccount() {
-            if (confirm('Ban co chan muon xoa tai khoan? Hanh dong nay khong the hoan tac.')) {
-                if (confirm('Tai khoan se bi xoa vinh vien. Tiep tuc?')) {
+        async function handleDeleteAccount() {
+            const password = prompt('Nhập mật khẩu để xác nhận xóa tài khoản:');
+            if (!password) return;
+
+            if (!confirm('Tài khoản sẽ bị xóa vĩnh viễn. Bạn có chắc chắn?')) return;
+
+            try {
+                const response = await fetch('/api/auth/delete-account', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.removeItem('authToken');
                     if (window.ToastManager) {
-                        window.ToastManager.warning('Lien he ho tro de xoa tai khoan.');
+                        window.ToastManager.success('Tài khoản đã được xóa.');
                     }
+                    setTimeout(() => { window.location.href = '/'; }, 1500);
+                } else {
+                    if (window.ToastManager) {
+                        window.ToastManager.error(data.error || 'Không thể xóa tài khoản.');
+                    }
+                }
+            } catch (err) {
+                console.error('Delete account error:', err);
+                if (window.ToastManager) {
+                    window.ToastManager.error('Có lỗi xảy ra. Vui lòng thử lại.');
                 }
             }
         }

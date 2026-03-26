@@ -28,23 +28,23 @@
                             <span>Explore Courses</span>
                             <i data-feather="arrow-right"></i>
                         </a>
-                        <a href="#" class="btn btn-secondary btn-lg">
+                        <a href="/courses" class="btn btn-secondary btn-lg">
                             <i data-feather="play-circle"></i>
-                            <span>Watch Demo</span>
+                            <span>Browse All</span>
                         </a>
                     </div>
 
                     <div class="hero-stats">
                         <div class="stat">
-                            <span class="stat-number">50K+</span>
+                            <span class="stat-number" id="heroStudents">0</span>
                             <span class="stat-label">Active Students</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number">200+</span>
+                            <span class="stat-number" id="heroInstructors">0</span>
                             <span class="stat-label">Expert Instructors</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number">1000+</span>
+                            <span class="stat-number" id="heroCourses">0</span>
                             <span class="stat-label">Courses Available</span>
                         </div>
                     </div>
@@ -152,8 +152,8 @@
                             <span>Browse Courses</span>
                             <i data-feather="arrow-right"></i>
                         </a>
-                        <a href="#" class="btn btn-secondary btn-lg">
-                            <span>View Pricing</span>
+                        <a href="/register" class="btn btn-secondary btn-lg">
+                            <span>Get Started Free</span>
                         </a>
                     </div>
                 </div>
@@ -312,7 +312,35 @@
 
             loadFeaturedCourses();
             loadCategories();
+            loadHeroStats();
         });
+
+        async function loadHeroStats() {
+            try {
+                const res = await fetch('/api/courses/stats/public');
+                if (res.ok) {
+                    const stats = await res.json();
+                    const animateCount = (el, target) => {
+                        const duration = 1000;
+                        const start = performance.now();
+                        const update = (now) => {
+                            const progress = Math.min((now - start) / duration, 1);
+                            el.textContent = Math.floor(target * progress).toLocaleString() + (target > 0 ? '+' : '');
+                            if (progress < 1) requestAnimationFrame(update);
+                        };
+                        requestAnimationFrame(update);
+                    };
+                    animateCount(document.getElementById('heroStudents'), stats.totalStudents || 0);
+                    animateCount(document.getElementById('heroInstructors'), stats.totalInstructors || 0);
+                    animateCount(document.getElementById('heroCourses'), stats.totalCourses || 0);
+                }
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+                document.getElementById('heroStudents').textContent = '0+';
+                document.getElementById('heroInstructors').textContent = '0+';
+                document.getElementById('heroCourses').textContent = '0+';
+            }
+        }
     </script>
 </body>
 </html>

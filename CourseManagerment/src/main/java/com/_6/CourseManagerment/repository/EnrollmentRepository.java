@@ -25,8 +25,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     // Get enrollments by user and status
     Page<Enrollment> findByUser_IdAndStatus(Long userId, String status, Pageable pageable);
     
-    // Get active enrollments
-    @Query("SELECT e FROM Enrollment e WHERE e.user.id = :userId AND e.status IN ('ENROLLED', 'IN_PROGRESS') ORDER BY e.lastAccessedDate DESC")
+    // Get active enrollments (chỉ lấy enrollment đã thanh toán hoặc miễn phí)
+    @Query("SELECT e FROM Enrollment e WHERE e.user.id = :userId AND e.status IN ('ENROLLED', 'IN_PROGRESS') AND e.paymentStatus IN ('PAID', 'FREE') ORDER BY e.lastAccessedDate DESC")
     Page<Enrollment> findActiveEnrollments(@Param("userId") Long userId, Pageable pageable);
     
     // Get completed enrollments
@@ -35,6 +35,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     
     // Check if user enrolled in course
     Boolean existsByUser_IdAndCourse_Id(Long userId, Long courseId);
+    
+    // Tìm enrollment theo orderId (liên kết với MoMo payment)
+    Optional<Enrollment> findByOrderId(String orderId);
     
     // Count enrollments for a course
     Integer countByCourse_Id(Long courseId);

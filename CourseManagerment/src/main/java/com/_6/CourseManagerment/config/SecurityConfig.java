@@ -142,6 +142,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/enrollments/**").authenticated()
                 
                 // ==================
+                // MOMO PAYMENT CALLBACKS (phải public vì MoMo gọi trực tiếp)
+                // ==================
+                .requestMatchers("/api/payment/momo-return", "/api/payment/momo-notify").permitAll()
+                
+                // ==================
                 // PUBLIC PAGES (HTML)
                 // ==================
                 // Public pages accessible without authentication

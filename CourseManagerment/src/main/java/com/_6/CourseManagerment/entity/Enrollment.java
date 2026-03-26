@@ -36,7 +36,13 @@ public class Enrollment {
     private Float progressPercentage = 0f;
     
     @Column
-    private String status; // ENROLLED, IN_PROGRESS, COMPLETED
+    private String status; // PENDING_PAYMENT, ENROLLED, IN_PROGRESS, COMPLETED
+    
+    @Column
+    private String paymentStatus; // PENDING, PAID, FREE
+    
+    @Column(unique = true)
+    private String orderId; // Mã đơn hàng liên kết với MoMo payment
     
     @Column
     private LocalDateTime lastAccessedDate;
@@ -47,6 +53,9 @@ public class Enrollment {
         this.lastAccessedDate = LocalDateTime.now();
         if (this.status == null) {
             this.status = "ENROLLED";
+        }
+        if (this.paymentStatus == null) {
+            this.paymentStatus = "FREE";
         }
     }
     
@@ -137,5 +146,21 @@ public class Enrollment {
     
     public void setLastAccessedDate(LocalDateTime lastAccessedDate) {
         this.lastAccessedDate = lastAccessedDate;
+    }
+    
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+    
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+    
+    public String getOrderId() {
+        return orderId;
+    }
+    
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 }

@@ -56,12 +56,43 @@
             <!-- Detailed Statistics -->
             <div class="section">
                 <h3>Course Performance</h3>
-                <p>Detailed course statistics coming soon...</p>
+                <table style="width:100%;border-collapse:collapse;" id="coursePerformanceTable">
+                    <thead>
+                        <tr style="border-bottom:2px solid #ddd;background:#f5f5f5;">
+                            <th style="padding:10px;text-align:left;">Course</th>
+                            <th style="padding:10px;text-align:center;">Status</th>
+                            <th style="padding:10px;text-align:center;">Level</th>
+                            <th style="padding:10px;text-align:right;">Students</th>
+                            <th style="padding:10px;text-align:right;">Rating</th>
+                            <th style="padding:10px;text-align:right;">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coursePerformanceBody">
+                        <tr><td colspan="6" style="padding:10px;text-align:center;color:#999;">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
             
             <div class="section">
-                <h3>Student Engagement</h3>
-                <p>Student engagement metrics coming soon...</p>
+                <h3>Course Overview</h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:15px;">
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#2ecc71;" id="statPublished">0</div>
+                        <div style="font-size:12px;color:#666;">Published</div>
+                    </div>
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#f39c12;" id="statDraft">0</div>
+                        <div style="font-size:12px;color:#666;">Draft</div>
+                    </div>
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#95a5a6;" id="statArchived">0</div>
+                        <div style="font-size:12px;color:#666;">Archived</div>
+                    </div>
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#3498db;" id="statAvgStudents">0</div>
+                        <div style="font-size:12px;color:#666;">Avg Students/Course</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -85,10 +116,41 @@
                     document.getElementById('activeCourses').textContent = stats.publishedCourses || 0;
                     document.getElementById('totalStudents').textContent = stats.totalStudents || 0;
                     document.getElementById('totalRevenue').textContent = '$' + (stats.totalRevenue || 0).toFixed(2);
+
+                    // Course overview breakdown
+                    document.getElementById('statPublished').textContent = stats.publishedCourses || 0;
+                    document.getElementById('statDraft').textContent = stats.draftCourses || 0;
+                    document.getElementById('statArchived').textContent = stats.archivedCourses || 0;
+                    const totalCourses = stats.totalCourses || 1;
+                    document.getElementById('statAvgStudents').textContent = Math.round((stats.totalStudents || 0) / totalCourses);
+
+                    // Course performance table
+                    const courses = stats.coursePerformance || [];
+                    const tbody = document.getElementById('coursePerformanceBody');
+                    if (courses.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="padding:10px;text-align:center;color:#999;">No courses yet. <a href="/instructor/courses/new" style="color:#6c5ce7;">Create one!</a></td></tr>';
+                    } else {
+                        const statusColors = { PUBLISHED: '#2ecc71', DRAFT: '#f39c12', ARCHIVED: '#95a5a6', REJECTED: '#e74c3c' };
+                        tbody.innerHTML = courses.map(c => `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:10px;"><a href="/instructor/courses/${c.id}/edit" style="color:#6c5ce7;text-decoration:none;">${escapeHtml(c.title)}</a></td>
+                                <td style="padding:10px;text-align:center;"><span style="padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${statusColors[c.status] || '#999'}20;color:${statusColors[c.status] || '#999'};">${c.status}</span></td>
+                                <td style="padding:10px;text-align:center;">${c.level || '-'}</td>
+                                <td style="padding:10px;text-align:right;font-weight:600;">${c.studentCount || 0}</td>
+                                <td style="padding:10px;text-align:right;color:#f39c12;">⭐ ${(c.rating || 0).toFixed(1)}</td>
+                                <td style="padding:10px;text-align:right;font-weight:600;color:#2ecc71;">$${parseFloat(c.revenue || 0).toFixed(2)}</td>
+                            </tr>
+                        `).join('');
+                    }
                 }
             } catch (error) {
                 console.error('Error loading statistics:', error);
             }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
         
         document.addEventListener('DOMContentLoaded', loadStatistics);

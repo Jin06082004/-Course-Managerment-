@@ -109,11 +109,8 @@ public class EnrollmentController {
     public ResponseEntity<?> isEnrolled(@PathVariable Long courseId) {
         try {
             Long userId = extractUserIdFromAuth();
-            Boolean enrolled = enrollmentService.isUserEnrolled(userId, courseId);
-            return ResponseEntity.ok(new HashMap<String, Object>() {{
-                put("enrolled", enrolled);
-                put("courseId", courseId);
-            }});
+            var status = enrollmentService.getEnrollmentStatus(userId, courseId);
+            return ResponseEntity.ok(status);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error", e.getMessage()));

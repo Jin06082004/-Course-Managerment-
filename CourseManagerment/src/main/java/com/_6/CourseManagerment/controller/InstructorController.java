@@ -328,17 +328,13 @@ public class InstructorController {
             long archivedCourses = courses.stream()
                     .filter(c -> "ARCHIVED".equals(c.getStatus()))
                     .count();
-            
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalCourses", courses.size());
-            stats.put("publishedCourses", publishedCourses);
-            stats.put("draftCourses", courses.stream()
+            long draftCourses = courses.stream()
                     .filter(c -> "DRAFT".equals(c.getStatus()))
-                    .count());
-            stats.put("archivedCourses", archivedCourses);
-            stats.put("totalStudents", courses.stream()
+                    .count();
+            
+            long totalStudents = courses.stream()
                     .mapToLong(c -> Long.valueOf(c.getStudentCount() != null ? c.getStudentCount() : 0))
-                    .sum());
+                    .sum();
             
             // Revenue calculation (price * studentCount per published course)
             BigDecimal totalRevenue = courses.stream()
@@ -349,7 +345,32 @@ public class InstructorController {
                         return price.multiply(BigDecimal.valueOf(count));
                     })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Per-course performance data
+            List<Map<String, Object>> coursePerformance = courses.stream()
+                    .map(c -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("id", c.getId());
+                        m.put("title", c.getTitle());
+                        m.put("status", c.getStatus());
+                        m.put("studentCount", c.getStudentCount() != null ? c.getStudentCount() : 0);
+                        m.put("rating", c.getRating() != null ? c.getRating() : 0.0f);
+                        m.put("level", c.getLevel());
+                        BigDecimal price = c.getPrice() != null ? c.getPrice() : BigDecimal.ZERO;
+                        int sCount = c.getStudentCount() != null ? c.getStudentCount() : 0;
+                        m.put("revenue", price.multiply(BigDecimal.valueOf(sCount)));
+                        return m;
+                    })
+                    .collect(Collectors.toList());
+
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalCourses", courses.size());
+            stats.put("publishedCourses", publishedCourses);
+            stats.put("draftCourses", draftCourses);
+            stats.put("archivedCourses", archivedCourses);
+            stats.put("totalStudents", totalStudents);
             stats.put("totalRevenue", totalRevenue);
+            stats.put("coursePerformance", coursePerformance);
             
             return ResponseEntity.ok(stats);
         } catch (Exception e) {

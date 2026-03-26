@@ -177,9 +177,9 @@
             <h1>⚙️ Admin Settings</h1>
 
             <div class="settings-grid">
-                <!-- System Settings -->
+                <!-- System / Platform Overview -->
                 <div class="settings-card">
-                    <h3>System Settings</h3>
+                    <h3>Platform Overview</h3>
                     <div class="setting-item">
                         <span class="setting-label">Platform Name</span>
                         <span class="setting-value">CourseManager</span>
@@ -189,49 +189,94 @@
                         <span class="setting-value">1.0.0</span>
                     </div>
                     <div class="setting-item">
-                        <span class="setting-label">Database</span>
-                        <span class="setting-value">MySQL 8.0</span>
+                        <span class="setting-label">Total Users</span>
+                        <span class="setting-value" id="settingTotalUsers">Loading...</span>
                     </div>
-                    <button onclick="alert('System settings update feature coming soon')">🔧 Configure</button>
+                    <div class="setting-item">
+                        <span class="setting-label">Total Courses</span>
+                        <span class="setting-value" id="settingTotalCourses">Loading...</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Total Enrollments</span>
+                        <span class="setting-value" id="settingTotalEnrollments">Loading...</span>
+                    </div>
                 </div>
 
-                <!-- Email Settings -->
+                <!-- Role Distribution -->
                 <div class="settings-card">
-                    <h3>Email Settings</h3>
+                    <h3>Role Distribution</h3>
                     <div class="setting-item">
-                        <span class="setting-label">SMTP Server</span>
-                        <span class="setting-value">Configured</span>
+                        <span class="setting-label">Admins</span>
+                        <span class="setting-value" id="settingAdminCount">Loading...</span>
                     </div>
                     <div class="setting-item">
-                        <span class="setting-label">From Address</span>
-                        <span class="setting-value">admin@coursemanager.com</span>
+                        <span class="setting-label">Instructors</span>
+                        <span class="setting-value" id="settingInstructorCount">Loading...</span>
                     </div>
                     <div class="setting-item">
-                        <span class="setting-label">Auto-replies</span>
-                        <span class="setting-value">Enabled</span>
+                        <span class="setting-label">Students</span>
+                        <span class="setting-value" id="settingStudentCount">Loading...</span>
                     </div>
-                    <button onclick="alert('Email settings update feature coming soon')">✉️ Configure</button>
                 </div>
 
                 <!-- Security Settings -->
                 <div class="settings-card">
                     <h3>Security Settings</h3>
                     <div class="setting-item">
-                        <span class="setting-label">Two-Factor Auth</span>
-                        <span class="setting-value">Disabled</span>
+                        <span class="setting-label">Authentication</span>
+                        <span class="setting-value">JWT Token</span>
                     </div>
                     <div class="setting-item">
-                        <span class="setting-label">Session Timeout</span>
-                        <span class="setting-value">30 minutes</span>
+                        <span class="setting-label">Password Encryption</span>
+                        <span class="setting-value">BCrypt</span>
                     </div>
                     <div class="setting-item">
-                        <span class="setting-label">SSL Certificate</span>
-                        <span class="setting-value">Active</span>
+                        <span class="setting-label">Payment Gateway</span>
+                        <span class="setting-value">MoMo</span>
                     </div>
-                    <button onclick="alert('Security settings update feature coming soon')">🔒 Configure</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        async function loadSettings() {
+            try {
+                const token = window.AuthManager.getToken();
+                if (!token) { window.location.href = '/login'; return; }
+                const headers = { 'Authorization': 'Bearer ' + token };
+
+                const [overviewRes, rolesRes] = await Promise.all([
+                    fetch('/api/admin/statistics/overview', { headers }),
+                    fetch('/api/admin/statistics/roles', { headers })
+                ]);
+
+                if (overviewRes.ok) {
+                    const stats = await overviewRes.json();
+                    document.getElementById('settingTotalUsers').textContent = stats.totalUsers || 0;
+                    document.getElementById('settingTotalCourses').textContent = stats.totalCourses || 0;
+                    document.getElementById('settingTotalEnrollments').textContent = stats.totalEnrollments || 0;
+                    document.getElementById('settingAdminCount').textContent = stats.adminCount || 0;
+                    document.getElementById('settingInstructorCount').textContent = stats.instructorCount || 0;
+                    const studentCount = (stats.totalUsers || 0) - (stats.adminCount || 0) - (stats.instructorCount || 0);
+                    document.getElementById('settingStudentCount').textContent = Math.max(0, studentCount);
+                }
+
+                if (rolesRes.ok) {
+                    const roles = await rolesRes.json();
+                    if (roles.ADMIN !== undefined) document.getElementById('settingAdminCount').textContent = roles.ADMIN;
+                    if (roles.INSTRUCTOR !== undefined) document.getElementById('settingInstructorCount').textContent = roles.INSTRUCTOR;
+                    if (roles.STUDENT !== undefined) document.getElementById('settingStudentCount').textContent = roles.STUDENT;
+                }
+            } catch (err) {
+                console.error('Error loading settings:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.feather) feather.replace();
+            loadSettings();
+        });
+    </script>
 </body>
 </html>

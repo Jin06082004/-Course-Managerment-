@@ -102,6 +102,7 @@
         const pageSize = 10;
 
         async function loadCourses(page = 0) {
+            currentPage = page;
             const tbody = document.getElementById('courseTableBody');
             const pagination = document.getElementById('pagination');
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">Loading...</td></tr>';
@@ -113,53 +114,111 @@
                 const search = document.getElementById('searchInput').value;
                 const status = document.getElementById('statusFilter').value;
 
-                let url = `/api/courses?page=${page}&size=${pageSize}&status=${status || ''}`;
-                if (search) {
-                    url = `/api/courses/search?title=${encodeURIComponent(search)}&page=${page}&size=${pageSize}`;
-                    if (status) url += `&status=${status}`;
-                }
+                let url = `/api/admin/courses?page=${page}&size=${pageSize}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (status) url += `&status=${encodeURIComponent(status)}`;
 
                 const res = await fetch(url, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
-                let data;
-                if (res.ok) {
-                    data = await res.json();
-                } else {
+                if (!res.ok) {
                     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;padding:20px;">Failed to load courses</td></tr>';
                     return;
                 }
 
+                const data = await res.json();
                 const courses = Array.isArray(data) ? data : (data.content || []);
-                pagination.innerHTML = '';
+                const totalPages = data.totalPages || 1;
 
                 if (courses.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">No courses found</td></tr>';
+                    pagination.innerHTML = '';
                     return;
                 }
 
                 tbody.innerHTML = courses.map(course => {
                     const statusClass = course.status ? 'status-' + course.status.toLowerCase() : 'status-draft';
                     const price = course.price && parseFloat(course.price) > 0 ? '$' + parseFloat(course.price).toFixed(2) : 'Free';
+                    const actions = buildActionButtons(course);
                     return `
-                        <tr>
+                        <tr id="course-row-${course.id}">
                             <td>${course.id || '-'}</td>
                             <td><a href="/courses/${course.id}" style="color:#3498db;text-decoration:none;">${escapeHtml(course.title || '-')}</a></td>
                             <td>${escapeHtml(course.instructorName || '-')}</td>
                             <td>${escapeHtml(course.categoryName || '-')}</td>
                             <td>${escapeHtml(course.level || '-')}</td>
                             <td>${price}</td>
-                            <td><span class="status-badge ${statusClass}">${course.status || 'DRAFT'}</span></td>
-                            <td>
-                                <a href="/courses/${course.id}" class="action-btn btn-view" style="text-decoration:none;display:inline-block;">View</a>
-                            </td>
+                            <td><span class="status-badge ${statusClass}" id="status-${course.id}">${course.status || 'DRAFT'}</span></td>
+                            <td>${actions}</td>
                         </tr>
                     `;
                 }).join('');
+
+                // Pagination
+                if (totalPages > 1) {
+                    let paginationHtml = '';
+                    if (page > 0) {
+                        paginationHtml += `<a onclick="loadCourses(${page - 1})">&laquo; Prev</a>`;
+                    }
+                    for (let i = 0; i < totalPages; i++) {
+                        if (i === page) {
+                            paginationHtml += `<span class="active">${i + 1}</span>`;
+                        } else {
+                            paginationHtml += `<a onclick="loadCourses(${i})">${i + 1}</a>`;
+                        }
+                    }
+                    if (page < totalPages - 1) {
+                        paginationHtml += `<a onclick="loadCourses(${page + 1})">Next &raquo;</a>`;
+                    }
+                    pagination.innerHTML = paginationHtml;
+                } else {
+                    pagination.innerHTML = '';
+                }
             } catch (error) {
                 console.error('Error loading courses:', error);
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;padding:20px;">Error loading courses</td></tr>';
+            }
+        }
+
+        function buildActionButtons(course) {
+            let html = `<a href="/courses/${course.id}" class="action-btn btn-view" style="text-decoration:none;display:inline-block;margin:2px;">View</a>`;
+            const status = (course.status || '').toUpperCase();
+            if (status === 'DRAFT' || status === 'PENDING') {
+                html += ` <button class="action-btn btn-approve" onclick="updateCourseStatus(${course.id}, 'PUBLISHED')" style="margin:2px;">Approve</button>`;
+                html += ` <button class="action-btn btn-reject" onclick="updateCourseStatus(${course.id}, 'REJECTED')" style="margin:2px;">Reject</button>`;
+            } else if (status === 'PUBLISHED') {
+                html += ` <button class="action-btn btn-reject" onclick="updateCourseStatus(${course.id}, 'ARCHIVED')" style="margin:2px;">Archive</button>`;
+            } else if (status === 'REJECTED' || status === 'ARCHIVED') {
+                html += ` <button class="action-btn btn-approve" onclick="updateCourseStatus(${course.id}, 'PUBLISHED')" style="margin:2px;">Publish</button>`;
+            }
+            return html;
+        }
+
+        async function updateCourseStatus(courseId, newStatus) {
+            const action = newStatus === 'PUBLISHED' ? 'publish' : newStatus === 'REJECTED' ? 'reject' : 'archive';
+            if (!confirm(`Are you sure you want to ${action} this course?`)) return;
+
+            try {
+                const token = window.AuthManager.getToken();
+                const res = await fetch(`/api/admin/courses/${courseId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (res.ok) {
+                    loadCourses(currentPage);
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to update course status');
+                }
+            } catch (error) {
+                console.error('Error updating course status:', error);
+                alert('Error updating course status');
             }
         }
 

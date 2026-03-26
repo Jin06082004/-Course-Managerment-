@@ -322,6 +322,35 @@
             gap: var(--spacing-sm);
         }
 
+        .payment-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-bottom: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .payment-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .payment-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .course-info-list {
             list-style: none;
             display: flex;
@@ -477,26 +506,28 @@
                     <p id="courseRequirements">No specific requirements.</p>
                 </div>
 
-                <!-- Placeholder Lessons -->
+                <!-- Course Content / Lessons -->
                 <div class="lessons-section">
                     <div class="lessons-header">
                         <h3><i data-feather="book" style="display: inline-block; margin-right: var(--spacing-md); color: var(--accent-primary);"></i> Course Content</h3>
                     </div>
-                    <div class="lesson-item active">
-                        <div class="lesson-header" onclick="toggleLesson(this)">
-                            <div class="lesson-info">
-                                <i data-feather="play-circle" class="lesson-icon"></i>
-                                <div class="lesson-details">
-                                    <div class="lesson-title">Module 1: Getting Started</div>
-                                    <div class="lesson-duration">Introduction and setup</div>
+                    <div id="lessonsContainer">
+                        <div class="lesson-item active">
+                            <div class="lesson-header" onclick="toggleLesson(this)">
+                                <div class="lesson-info">
+                                    <i data-feather="play-circle" class="lesson-icon"></i>
+                                    <div class="lesson-details">
+                                        <div class="lesson-title">Loading course content...</div>
+                                        <div class="lesson-duration"></div>
+                                    </div>
+                                </div>
+                                <div class="lesson-toggle">
+                                    <i data-feather="chevron-down"></i>
                                 </div>
                             </div>
-                            <div class="lesson-toggle">
-                                <i data-feather="chevron-down"></i>
+                            <div class="lesson-content">
+                                <div class="lesson-desc">Loading...</div>
                             </div>
-                        </div>
-                        <div class="lesson-content">
-                            <div class="lesson-desc">Start your learning journey with this comprehensive course.</div>
                         </div>
                     </div>
                 </div>
@@ -667,25 +698,62 @@
 
             const btn = document.getElementById('enrollBtn');
             btn.disabled = true;
-            btn.textContent = 'Enrolling...';
+            btn.textContent = 'Processing...';
 
             try {
+                // Gọi enroll API — backend tự phân biệt free vs paid
                 const data = await ApiService.enrollInCourse(courseId);
-                btn.textContent = '✅ Enrolled!';
-                btn.className = 'enrolled-btn';
-                btn.innerHTML = '<i data-feather="check-circle" style="width:18px;height:18px;"></i> Enrolled!';
 
-                setTimeout(() => {
-                    window.location.href = '/my-courses';
-                }, 1500);
+                if (data.paymentStatus === 'PENDING') {
+                    // Khóa học có phí → tiến hành thanh toán MoMo
+                    handlePayment(courseId);
+                } else {
+                    // Khóa học miễn phí → enrolled ngay
+                    btn.textContent = '✅ Enrolled!';
+                    btn.className = 'enrolled-btn';
+                    btn.innerHTML = '<i data-feather="check-circle" style="width:18px;height:18px;"></i> Enrolled!';
+                    setTimeout(() => {
+                        window.location.href = '/my-courses';
+                    }, 1500);
+                }
             } catch (error) {
                 console.error('Enrollment error:', error);
                 btn.disabled = false;
                 btn.textContent = 'Enroll Now';
-                alert('Failed to enroll. Please try again.');
+                btn.className = 'enroll-btn';
+                alert(error.error || 'Failed to enroll. Please try again.');
             }
 
             feather.replace();
+        }
+
+        // =====================
+        // Handle MoMo payment
+        // =====================
+        async function handlePayment(courseId) {
+            const btn = document.getElementById('enrollBtn');
+            btn.disabled = true;
+            btn.className = 'payment-btn';
+            btn.innerHTML = '<i data-feather="loader" style="width:18px;height:18px;"></i> Redirecting to MoMo...';
+            feather.replace();
+
+            try {
+                const data = await ApiService.createPayment(courseId);
+                console.log('MoMo response:', data);
+                if (data.payUrl) {
+                    window.location.href = data.payUrl;
+                } else {
+                    throw new Error(data.error || 'Không nhận được payUrl từ MoMo');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert('Lỗi thanh toán: ' + error.message);
+                btn.disabled = false;
+                btn.className = 'payment-btn';
+                btn.innerHTML = '<i data-feather="credit-card" style="width:18px;height:18px;"></i> Pay Now';
+                feather.replace();
+                alert(error.error || 'Lỗi thanh toán. Vui lòng thử lại.');
+            }
         }
 
         // =====================
@@ -697,11 +765,20 @@
                 const btn = document.getElementById('enrollBtn');
 
                 if (data.enrolled) {
-                    btn.textContent = 'Already Enrolled';
-                    btn.className = 'enrolled-btn';
-                    btn.innerHTML = '<i data-feather="check-circle" style="width:18px;height:18px;"></i> Already Enrolled';
-                    btn.disabled = true;
-                    btn.onclick = () => { window.location.href = '/my-courses'; };
+                    if (data.paymentStatus === 'PENDING') {
+                        // Đã enroll nhưng chưa thanh toán → hiển nút thanh toán
+                        btn.className = 'payment-btn';
+                        btn.innerHTML = '<i data-feather="credit-card" style="width:18px;height:18px;"></i> Pay Now';
+                        btn.disabled = false;
+                        btn.onclick = () => { handlePayment(courseId); };
+                    } else {
+                        // Đã thanh toán hoặc miễn phí → hiển đã enrolled
+                        btn.textContent = 'Already Enrolled';
+                        btn.className = 'enrolled-btn';
+                        btn.innerHTML = '<i data-feather="check-circle" style="width:18px;height:18px;"></i> Already Enrolled';
+                        btn.disabled = true;
+                        btn.onclick = () => { window.location.href = '/my-courses'; };
+                    }
                 }
                 feather.replace();
             } catch (error) {
@@ -767,20 +844,65 @@
                 document.getElementById('instructorAvatar').src =
                     `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(course.instructorName || 'instructor')}`;
 
-                // What you'll learn
+                // What you'll learn — generate from course description + metadata
                 const whatYouLearn = document.getElementById('courseWhatYouLearn');
                 if (course.description) {
-                    const points = [
-                        'Comprehensive curriculum covering core concepts',
-                        'Hands-on projects and real-world examples',
-                        'Best practices and industry standards',
-                        'Certificate of completion',
-                        'Lifetime access to materials',
-                        'Community support and peer networking',
-                        'Practical exercises and quizzes',
-                        'Career guidance and interview prep',
-                    ];
-                    whatYouLearn.innerHTML = points.slice(0, 6).map(p => `<li>${p}</li>`).join('');
+                    const level = (course.level || 'Beginner').toUpperCase();
+                    const category = course.categoryName || 'Programming';
+                    const duration = course.duration || 0;
+                    const points = [];
+                    points.push(`Master ${category} fundamentals and core concepts`);
+                    points.push('Build real-world projects with hands-on exercises');
+                    if (level === 'BEGINNER') {
+                        points.push('Start from scratch with no prior experience needed');
+                        points.push('Learn industry best practices from the ground up');
+                    } else if (level === 'INTERMEDIATE') {
+                        points.push('Deepen your understanding of advanced patterns');
+                        points.push('Implement professional-grade solutions');
+                    } else {
+                        points.push('Master expert-level techniques and optimizations');
+                        points.push('Design and architect complex systems');
+                    }
+                    if (duration > 10) {
+                        points.push(`${duration}+ hours of comprehensive video content`);
+                    }
+                    points.push('Certificate of completion upon finishing the course');
+                    whatYouLearn.innerHTML = points.map(p => `<li>${p}</li>`).join('');
+                }
+
+                // Generate course content modules dynamically
+                const lessonsContainer = document.getElementById('lessonsContainer');
+                if (course.description || course.title) {
+                    const dur = course.duration || 1;
+                    const lvl = (course.level || 'BEGINNER').toUpperCase();
+                    const cat = course.categoryName || 'Programming';
+                    const modules = [];
+                    modules.push({ title: 'Introduction & Setup', desc: `Welcome to ${course.title}. Get your development environment ready and understand the course roadmap.`, duration: Math.max(1, Math.round(dur * 0.1)) });
+                    modules.push({ title: `${cat} Fundamentals`, desc: `Learn the core concepts and building blocks of ${cat}.`, duration: Math.max(1, Math.round(dur * 0.25)) });
+                    modules.push({ title: 'Hands-on Practice', desc: 'Apply what you\'ve learned through guided exercises and mini-projects.', duration: Math.max(1, Math.round(dur * 0.25)) });
+                    if (lvl !== 'BEGINNER') {
+                        modules.push({ title: 'Advanced Techniques', desc: `Dive deeper into advanced ${cat} patterns and best practices.`, duration: Math.max(1, Math.round(dur * 0.2)) });
+                    }
+                    modules.push({ title: 'Final Project & Review', desc: 'Build a comprehensive project applying all course concepts. Course review and next steps.', duration: Math.max(1, Math.round(dur * 0.2)) });
+
+                    const icons = ['play-circle', 'book-open', 'code', 'layers', 'award'];
+                    lessonsContainer.innerHTML = modules.map((m, i) => `
+                        <div class="lesson-item${i === 0 ? ' active' : ''}">
+                            <div class="lesson-header" onclick="toggleLesson(this)">
+                                <div class="lesson-info">
+                                    <i data-feather="${icons[i] || 'play-circle'}" class="lesson-icon"></i>
+                                    <div class="lesson-details">
+                                        <div class="lesson-title">Module ${i + 1}: ${m.title}</div>
+                                        <div class="lesson-duration">${m.duration} hour${m.duration > 1 ? 's' : ''}</div>
+                                    </div>
+                                </div>
+                                <div class="lesson-toggle"><i data-feather="chevron-down"></i></div>
+                            </div>
+                            <div class="lesson-content">
+                                <div class="lesson-desc">${m.desc}</div>
+                            </div>
+                        </div>
+                    `).join('');
                 }
 
                 // Show content

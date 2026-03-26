@@ -221,4 +221,34 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
+
+    /**
+     * Delete authenticated user's account
+     */
+    @DeleteMapping("/delete-account")
+    @Operation(summary = "Delete user account")
+    public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body) {
+        String username = org.springframework.security.core.context.SecurityContextHolder
+            .getContext().getAuthentication().getName();
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+
+        String password = body.get("password");
+        if (password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Password is required to confirm account deletion"));
+        }
+
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Incorrect password"));
+        }
+
+        userRepository.delete(user);
+        log.info("Account deleted for user: {}", username);
+
+        return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
+    }
 }

@@ -8,6 +8,8 @@ import com._6.CourseManagerment.entity.User;
 import com._6.CourseManagerment.repository.CategoryRepository;
 import com._6.CourseManagerment.repository.CourseRepository;
 import com._6.CourseManagerment.repository.UserRepository;
+import com._6.CourseManagerment.repository.EnrollmentRepository;
+import com._6.CourseManagerment.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +31,12 @@ public class CourseService {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
     
     /**
      * Create a new course
@@ -216,5 +224,28 @@ public class CourseService {
                 .orElseThrow(() -> new Exception("Course not found"));
         course.setStudentCount(course.getStudentCount() + 1);
         courseRepository.save(course);
+    }
+
+    /**
+     * Get total published courses count (public)
+     */
+    public long getTotalPublishedCourses() {
+        return courseRepository.countByStatus("PUBLISHED");
+    }
+
+    /**
+     * Get total enrolled students (public)
+     */
+    public long getTotalStudents() {
+        return enrollmentRepository.count();
+    }
+
+    /**
+     * Get total instructors (public)
+     */
+    public long getTotalInstructors() {
+        return roleRepository.findByName("INSTRUCTOR")
+                .map(role -> userRepository.countByRole(role))
+                .orElse(0L);
     }
 }

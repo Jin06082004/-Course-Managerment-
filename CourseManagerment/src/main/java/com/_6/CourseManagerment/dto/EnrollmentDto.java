@@ -14,10 +14,11 @@ public class EnrollmentDto {
     private LocalDateTime enrollmentDate;
     private LocalDateTime completionDate;
     private Float progressPercentage;
-    private String status; // ENROLLED, IN_PROGRESS, COMPLETED
+    private String status; // PENDING_PAYMENT, ENROLLED, IN_PROGRESS, COMPLETED
     private LocalDateTime lastAccessedDate;
     private String instructorName;
     private Integer totalLessons;
+    private String paymentStatus; // PENDING, PAID, FREE
     
     public EnrollmentDto() {}
     
@@ -35,6 +36,7 @@ public class EnrollmentDto {
         this.lastAccessedDate = enrollment.getLastAccessedDate();
         this.instructorName = enrollment.getCourse().getInstructor() != null ? 
                             enrollment.getCourse().getInstructor().getFullName() : "Unknown";
+        this.paymentStatus = enrollment.getPaymentStatus();
     }
     
     // Getters and Setters
@@ -140,5 +142,13 @@ public class EnrollmentDto {
     
     public void setTotalLessons(Integer totalLessons) {
         this.totalLessons = totalLessons;
+    }
+    
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+    
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 }

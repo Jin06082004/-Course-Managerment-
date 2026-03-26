@@ -154,6 +154,20 @@ const ApiService = {
         return this.fetch(`/enrollments/${courseId}/unenroll`, { method: 'DELETE' });
     },
 
+    // =====================
+    // PAYMENT
+    // =====================
+
+    /**
+     * Create MoMo payment for a course
+     */
+    async createPayment(courseId) {
+        return this.fetch('/payment/create', {
+            method: 'POST',
+            body: JSON.stringify({ courseId: String(courseId) }),
+        });
+    },
+
     /**
      * Update enrollment progress
      */

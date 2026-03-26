@@ -203,17 +203,64 @@
             <!-- Detailed Statistics -->
             <div class="section">
                 <h3>User Statistics</h3>
-                <p>Detailed user statistics coming soon...</p>
+                <table style="width:100%;border-collapse:collapse;" id="userStatsTable">
+                    <thead>
+                        <tr style="border-bottom:2px solid #ddd;background:#f5f5f5;">
+                            <th style="padding:10px;text-align:left;">Role</th>
+                            <th style="padding:10px;text-align:right;">Count</th>
+                            <th style="padding:10px;text-align:right;">Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userStatsBody">
+                        <tr><td colspan="3" style="padding:10px;text-align:center;color:#999;">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
             
             <div class="section">
                 <h3>Course Performance</h3>
-                <p>Course performance metrics coming soon...</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;" id="courseBreakdown">
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#2ecc71;" id="publishedCount">0</div>
+                        <div style="font-size:12px;color:#666;">Published</div>
+                    </div>
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#f39c12;" id="draftCount">0</div>
+                        <div style="font-size:12px;color:#666;">Draft</div>
+                    </div>
+                    <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <div style="font-size:24px;font-weight:700;color:#95a5a6;" id="archivedCount">0</div>
+                        <div style="font-size:12px;color:#666;">Archived</div>
+                    </div>
+                </div>
+                <h4 style="margin:15px 0 10px;color:#2c3e50;">Top Courses</h4>
+                <table style="width:100%;border-collapse:collapse;" id="topCoursesTable">
+                    <thead>
+                        <tr style="border-bottom:2px solid #ddd;background:#f5f5f5;">
+                            <th style="padding:10px;text-align:left;">Course</th>
+                            <th style="padding:10px;text-align:left;">Instructor</th>
+                            <th style="padding:10px;text-align:right;">Students</th>
+                            <th style="padding:10px;text-align:right;">Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCoursesBody">
+                        <tr><td colspan="4" style="padding:10px;text-align:center;color:#999;">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
             
             <div class="section">
                 <h3>Platform Analytics</h3>
-                <p>Platform analytics coming soon...</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div style="padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <h4 style="margin:0 0 10px;color:#2c3e50;font-size:14px;">Avg Students per Course</h4>
+                        <div style="font-size:28px;font-weight:700;color:#3498db;" id="avgStudents">0</div>
+                    </div>
+                    <div style="padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <h4 style="margin:0 0 10px;color:#2c3e50;font-size:14px;">Enrollment Rate</h4>
+                        <div style="font-size:28px;font-weight:700;color:#e74c3c;" id="enrollRate">0%</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -232,12 +279,64 @@
                     'Content-Type': 'application/json'
                 };
 
-                const response = await fetch('/api/admin/statistics/overview', { headers });
-                if (response.ok) {
-                    const stats = await response.json();
+                const [overviewRes, rolesRes, topCoursesRes] = await Promise.all([
+                    fetch('/api/admin/statistics/overview', { headers }),
+                    fetch('/api/admin/statistics/roles', { headers }),
+                    fetch('/api/admin/statistics/top-courses', { headers })
+                ]);
+
+                if (overviewRes.ok) {
+                    const stats = await overviewRes.json();
                     document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
                     document.getElementById('totalCourses').textContent = stats.totalCourses || 0;
                     document.getElementById('totalEnrollments').textContent = stats.totalEnrollments || 0;
+
+                    // Course breakdown
+                    document.getElementById('publishedCount').textContent = stats.publishedCourses || 0;
+                    document.getElementById('draftCount').textContent = stats.draftCourses || 0;
+                    document.getElementById('archivedCount').textContent = stats.archivedCourses || 0;
+
+                    // Platform analytics
+                    const totalCourses = stats.totalCourses || 1;
+                    const avgStudents = Math.round((stats.totalEnrollments || 0) / totalCourses);
+                    document.getElementById('avgStudents').textContent = avgStudents;
+
+                    const totalUsers = stats.totalUsers || 1;
+                    const enrollRate = Math.round(((stats.totalEnrollments || 0) / totalUsers) * 100);
+                    document.getElementById('enrollRate').textContent = enrollRate + '%';
+
+                    // User stats table
+                    const userBody = document.getElementById('userStatsBody');
+                    const total = stats.totalUsers || 1;
+                    const roles = [
+                        { name: 'Admin', count: stats.adminCount || 0 },
+                        { name: 'Instructor', count: stats.instructorCount || 0 },
+                        { name: 'Student', count: stats.studentCount || 0 }
+                    ];
+                    userBody.innerHTML = roles.map(r => `
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:10px;">${r.name}</td>
+                            <td style="padding:10px;text-align:right;font-weight:600;">${r.count}</td>
+                            <td style="padding:10px;text-align:right;color:#3498db;">${Math.round((r.count / total) * 100)}%</td>
+                        </tr>
+                    `).join('');
+                }
+
+                if (topCoursesRes.ok) {
+                    const courses = await topCoursesRes.json();
+                    const tbody = document.getElementById('topCoursesBody');
+                    if (courses.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="padding:10px;text-align:center;color:#999;">No courses yet</td></tr>';
+                    } else {
+                        tbody.innerHTML = courses.map(c => `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:10px;"><a href="/courses/${c.id}" style="color:#3498db;text-decoration:none;">${c.title}</a></td>
+                                <td style="padding:10px;">${c.instructorName || '-'}</td>
+                                <td style="padding:10px;text-align:right;font-weight:600;">${c.studentCount || 0}</td>
+                                <td style="padding:10px;text-align:right;color:#f39c12;">⭐ ${(c.rating || 0).toFixed(1)}</td>
+                            </tr>
+                        `).join('');
+                    }
                 }
             } catch (error) {
                 console.error('Error loading statistics:', error);
