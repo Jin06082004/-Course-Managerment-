@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Management - Instructor Panel</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/instructor.css}">
+    <script th:src="@{/js/auth.js}"></script>
+</head>
+<body class="instructor-app">
+<div th:replace="fragments/navbar"></div>
+
+<div class="instructor-container">
+    <nav class="instructor-sidebar">
+        <h3>Instructor Panel</h3>
+        <ul>
+            <li><a href="/instructor">Dashboard</a></li>
+            <li><a href="/instructor/courses">My Courses</a></li>
+            <li><a href="/instructor/quiz-management">Quiz Management</a></li>
+            <li><a href="/instructor/exam-management" class="active">Exam Management</a></li>
+            <li><a href="/instructor/settings">Settings</a></li>
+        </ul>
+    </nav>
+
+    <div class="instructor-content">
+        <header class="instructor-page-header" style="margin-bottom: 1rem;">
+            <p class="eyebrow">Assessments</p>
+            <h1>Exam management</h1>
+            <a href="/instructor/exam-builder" class="action-button" style="margin-top:0.75rem; display:inline-block;">+ Create new exam</a>
+        </header>
+
+        <div class="instructor-section">
+            <div class="filter-bar" style="margin-bottom:1rem;">
+                <input id="courseIdFilter" type="number" placeholder="Filter by Course ID (optional)" />
+                <button class="action-button secondary" onclick="loadExams()">Apply</button>
+            </div>
+            <div id="examList"><p class="empty-state">Loading exams...</p></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getToken() {
+        return localStorage.getItem('authToken');
+    }
+
+    function examRow(exam) {
+        const status = exam.isPublished ? 'Published' : 'Draft';
+        return `
+            <div class="course-card" style="margin-bottom:0.75rem;">
+                <div class="course-header">
+                    <h4>${exam.title || 'Untitled Exam'}</h4>
+                    <div>${status}</div>
+                </div>
+                <div class="course-body">
+                    <p>${exam.description || 'No description'}</p>
+                    <div class="course-stats">
+                        <div class="course-stat"><div class="course-stat-number">${exam.duration || 0}</div><div class="course-stat-label">Minutes</div></div>
+                        <div class="course-stat"><div class="course-stat-number">${exam.totalMarks || 0}</div><div class="course-stat-label">Total Marks</div></div>
+                        <div class="course-stat"><div class="course-stat-number">${exam.questionCount || 0}</div><div class="course-stat-label">Questions</div></div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+                        <a class="action-button secondary" href="/instructor/exam-builder?examId=${exam.id}">Edit</a>
+                        <button class="action-button secondary" onclick="publishExam(${exam.id})">Publish</button>
+                        <button class="action-button danger" onclick="deleteExam(${exam.id})">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadExams() {
+        const token = getToken();
+        if (!token) { window.location.href = '/login'; return; }
+
+        const courseId = document.getElementById('courseIdFilter').value;
+        const url = courseId ? `/api/instructor/exams?courseId=${courseId}` : '/api/instructor/exams';
+
+        try {
+            const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load exams');
+
+            const exams = data.exams || [];
+            const box = document.getElementById('examList');
+            if (exams.length === 0) {
+                box.innerHTML = '<p class="empty-state">No exams yet. Create your first exam.</p>';
+                return;
+            }
+            box.innerHTML = exams.map(examRow).join('');
+        } catch (e) {
+            document.getElementById('examList').innerHTML = `<p style="color:red;">${e.message}</p>`;
+        }
+    }
+
+    async function publishExam(examId) {
+        const token = getToken();
+        if (!token) return;
+        const res = await fetch(`/api/instructor/exams/${examId}/publish`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            alert(data.error || 'Publish failed');
+            return;
+        }
+        loadExams();
+    }
+
+    async function deleteExam(examId) {
+        if (!confirm('Delete this exam?')) return;
+        const token = getToken();
+        if (!token) return;
+        const res = await fetch(`/api/instructor/exams/${examId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            alert(data.error || 'Delete failed');
+            return;
+        }
+        loadExams();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadExams);
+</script>
+</body>
+</html>

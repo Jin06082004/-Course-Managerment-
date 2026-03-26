@@ -41,6 +41,10 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     
     // Check if code exists
     Boolean existsByCode(String code);
+
+    // Fetch course with its instructor eagerly (for ownership checks)
+    @Query("SELECT c FROM Course c JOIN FETCH c.instructor WHERE c.id = :id")
+    Optional<Course> findByIdWithInstructor(@Param("id") Long id);
     
     // Custom query for search with multiple criteria
     @Query("SELECT c FROM Course c WHERE " +

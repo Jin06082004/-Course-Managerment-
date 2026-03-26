@@ -72,13 +72,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     
     /**
-     * Extract JWT token from Authorization header
-     * Expected format: "Bearer <token>"
+     * Extract JWT token from Authorization header OR from ?t= query param.
+     * The query-param fallback is used by the HTML5 video element which cannot
+     * send custom headers — the JS sets src="/api/videos/1/play?t=JWT_TOKEN".
      */
     private String getJwtFromRequest(HttpServletRequest request) {
+        // 1. Authorization header (preferred for API calls)
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
+        }
+        // 2. ?t= query parameter (for HTML5 video/audio src attributes)
+        String tokenParam = request.getParameter("t");
+        if (StringUtils.hasText(tokenParam)) {
+            return tokenParam;
         }
         return null;
     }

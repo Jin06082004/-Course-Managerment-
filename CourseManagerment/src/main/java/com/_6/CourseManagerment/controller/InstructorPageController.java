@@ -70,6 +70,42 @@ public class InstructorPageController {
         model.addAttribute("courseId", id);
         return "instructor/course-content";
     }
+
+    /**
+     * Quiz management page
+     */
+    @GetMapping("/quiz-management")
+    public String quizManagement(Model model) {
+        model.addAttribute("pageTitle", "Quiz Management");
+        return "instructor/quiz-management";
+    }
+
+    /**
+     * Quiz builder page
+     */
+    @GetMapping("/quiz-builder")
+    public String quizBuilder(Model model) {
+        model.addAttribute("pageTitle", "Quiz Builder");
+        return "instructor/quiz-builder";
+    }
+
+    /**
+     * Exam management page
+     */
+    @GetMapping("/exam-management")
+    public String examManagement(Model model) {
+        model.addAttribute("pageTitle", "Exam Management");
+        return "instructor/exam-management";
+    }
+
+    /**
+     * Exam builder page
+     */
+    @GetMapping("/exam-builder")
+    public String examBuilder(Model model) {
+        model.addAttribute("pageTitle", "Exam Builder");
+        return "instructor/exam-builder";
+    }
     
     /**
      * Instructor statistics page

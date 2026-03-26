@@ -1,0 +1,543 @@
+<div class="results-wrapper">
+    <!-- Results Header -->
+    <div class="results-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="results-title">
+                        <i class="fas fa-check-circle"></i> Exam Completed!
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Display Section -->
+    <div class="score-section">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Score Card -->
+                <div class="col-lg-6 mb-4">
+                    <div class="score-card" id="scoreCard">
+                        <div class="score-display">
+                            <div class="score-circle" id="scoreCircle">
+                                <span class="score-value" id="scoreValue">0</span>
+                                <span class="score-total" id="scoreTotal">/ 0</span>
+                            </div>
+                        </div>
+                        <div class="score-info">
+                            <div class="score-row">
+                                <span>Percentage</span>
+                                <strong id="percentage">0%</strong>
+                            </div>
+                            <div class="score-row">
+                                <span>Passing Marks</span>
+                                <strong id="passingMarks">0</strong>
+                            </div>
+                            <div class="score-row">
+                                <span>Status</span>
+                                <div id="statusBadge" class="status-badge">
+                                    <i class="fas fa-circle"></i> <span id="statusText">Calculating...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exam Details Card -->
+                <div class="col-lg-6 mb-4">
+                    <div class="details-card">
+                        <h3>Exam Details</h3>
+                        <div class="detail-row">
+                            <span class="label">Exam Title</span>
+                            <span class="value" id="examTitle">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Questions</span>
+                            <span class="value" id="totalQuestions">0</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Correct Answers</span>
+                            <span class="value" id="correctAnswers">0</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Wrong Answers</span>
+                            <span class="value" id="wrongAnswers">0</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Submitted At</span>
+                            <span class="value" id="submittedAt">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-section">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 d-flex gap-3 justify-content-center flex-wrap">
+                    <button class="btn btn-primary btn-lg" onclick="downloadResults()">
+                        <i class="fas fa-download"></i> Download Results
+                    </button>
+                    <button class="btn btn-outline-primary btn-lg" onclick="reviewAnswers()">
+                        <i class="fas fa-eye"></i> Review Answers
+                    </button>
+                    <a href="/courses" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-home"></i> Back to Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answer Review Section -->
+    <div class="answers-review-section" id="answersReviewSection" style="display: none;">
+        <div class="container-fluid">
+            <div class="review-header">
+                <h2>
+                    <i class="fas fa-list-check"></i> Answer Review
+                </h2>
+                <p class="text-muted">Review your answers and explanations below</p>
+            </div>
+
+            <div class="answers-container" id="answersContainer">
+                <!-- Answers will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Download Modal -->
+<div class="modal fade" id="downloadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Download Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select format to download your results:</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="downloadPDF()">
+                        <i class="fas fa-file-pdf"></i> Download as PDF
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="downloadJSON()">
+                        <i class="fas fa-file-code"></i> Download as JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --primary-color: #4f46e5;
+        --secondary-color: #8b5cf6;
+        --light-bg: #f3f4f6;
+        --border-color: #e5e7eb;
+    }
+
+    .results-wrapper {
+        background: #fafafa;
+        min-height: 100vh;
+        padding-bottom: 40px;
+    }
+
+    .results-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 40px 0;
+        box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+        margin-bottom: 40px;
+    }
+
+    .results-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .score-section {
+        margin-bottom: 40px;
+    }
+
+    .score-card {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .score-display {
+        margin-bottom: 30px;
+    }
+
+    .score-circle {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 32px rgba(79, 70, 229, 0.4);
+        margin: 0 auto;
+    }
+
+    .score-circle.passed {
+        background: linear-gradient(135deg, var(--success-color), #059669);
+    }
+
+    .score-circle.failed {
+        background: linear-gradient(135deg, var(--danger-color), #dc2626);
+    }
+
+    .score-value {
+        font-size: 3rem;
+        font-weight: 700;
+    }
+
+    .score-total {
+        font-size: 1.3rem;
+        opacity: 0.9;
+    }
+
+    .score-info {
+        width: 100%;
+    }
+
+    .score-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 1.1rem;
+    }
+
+    .score-row:last-child {
+        border-bottom: none;
+    }
+
+    .score-row strong {
+        color: var(--primary-color);
+        font-size: 1.3rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .status-badge.passed {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--success-color);
+    }
+
+    .status-badge.failed {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger-color);
+    }
+
+    .details-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .details-card h3 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-row .label {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .detail-row .value {
+        color: #1f2937;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .actions-section {
+        margin: 40px 0;
+        text-align: center;
+    }
+
+    .btn-lg {
+        padding: 12px 30px;
+        font-weight: 600;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        border: none;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #4338ca;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn-outline-primary {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: white;
+    }
+
+    .btn-outline-primary:hover {
+        background: rgba(79, 70, 229, 0.1);
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #6b7280;
+        color: #6b7280;
+        background: white;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f3f4f6;
+    }
+
+    .answers-review-section {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        margin-top: 40px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .review-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .review-header h2 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .answers-container {
+        display: grid;
+        gap: 25px;
+    }
+
+    .answer-card {
+        background: var(--light-bg);
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 4px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .answer-card.correct {
+        border-left-color: var(--success-color);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .answer-card.incorrect {
+        border-left-color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .answer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+
+    .question-number-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .answer-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .answer-badge.correct {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--success-color);
+    }
+
+    .answer-badge.incorrect {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger-color);
+    }
+
+    .question-text {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 15px;
+        font-size: 1.05rem;
+        line-height: 1.5;
+    }
+
+    .answer-comparison {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .answer-item {
+        padding: 10px 15px;
+        border-radius: 8px;
+        background: white;
+        border: 1px solid var(--border-color);
+    }
+
+    .answer-item.your-answer {
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .answer-item.correct-answer {
+        border-left: 3px solid var(--success-color);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .answer-item-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .answer-item-content {
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .marks-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: rgba(79, 70, 229, 0.1);
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .explanation {
+        margin-top: 15px;
+        padding: 15px;
+        background: #fef3c7;
+        border-left: 3px solid var(--warning-color);
+        border-radius: 6px;
+    }
+
+    .explanation-label {
+        font-weight: 600;
+        color: #92400e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .explanation-text {
+        color: #78350f;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-body {
+        padding: 30px 20px;
+    }
+
+    @media (max-width: 768px) {
+        .results-title {
+            font-size: 1.75rem;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+        }
+
+        .score-value {
+            font-size: 2rem;
+        }
+
+        .btn-lg {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
+        .answer-card {
+            padding: 15px;
+        }
+    }
+</style>
+
+<script src="/js/exam-results.js"></script>

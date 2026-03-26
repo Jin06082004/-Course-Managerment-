@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Builder - Instructor Panel</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/instructor.css}">
+    <script th:src="@{/js/auth.js}"></script>
+</head>
+<body class="instructor-app">
+<div th:replace="fragments/navbar"></div>
+
+<div class="instructor-container">
+    <nav class="instructor-sidebar">
+        <h3>Instructor Panel</h3>
+        <ul>
+            <li><a href="/instructor">Dashboard</a></li>
+            <li><a href="/instructor/courses">My Courses</a></li>
+            <li><a href="/instructor/quiz-management">Quiz Management</a></li>
+            <li><a href="/instructor/exam-management" class="active">Exam Management</a></li>
+            <li><a href="/instructor/settings">Settings</a></li>
+        </ul>
+    </nav>
+
+    <div class="instructor-content">
+        <header class="instructor-page-header" style="margin-bottom: 1rem;">
+            <p class="eyebrow">Assessments</p>
+            <h1 id="pageTitle">Create exam</h1>
+        </header>
+
+        <div class="instructor-section">
+            <form id="examForm">
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Course ID</label>
+                    <input id="courseId" type="number" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Title</label>
+                    <input id="title" type="text" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Description</label>
+                    <textarea id="description"></textarea>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(4, minmax(120px,1fr)); gap:0.75rem; margin-bottom:0.75rem;">
+                    <div><label>Duration (min)</label><input id="duration" type="number" value="60" min="1" required></div>
+                    <div><label>Total marks</label><input id="totalMarks" type="number" value="100" min="1" required></div>
+                    <div><label>Passing marks</label><input id="passingMarks" type="number" value="50" min="1" required></div>
+                    <div><label>Questions</label><input id="questionCount" type="number" value="1" min="1" max="30" required></div>
+                </div>
+                <div style="display:flex; gap:1rem; margin-bottom:0.75rem;">
+                    <label><input id="randomizeQuestions" type="checkbox"> Randomize questions</label>
+                    <label><input id="showResults" type="checkbox" checked> Show results</label>
+                </div>
+
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="button" class="action-button secondary" onclick="saveExam(true)">Save Draft</button>
+                    <button type="button" class="action-button" onclick="saveExam(false)">Create & Publish</button>
+                    <a href="/instructor/exam-management" class="action-button secondary">Back</a>
+                </div>
+            </form>
+            <p id="feedback" style="margin-top:1rem;"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getToken() {
+        return localStorage.getItem('authToken');
+    }
+
+    function getQuestionTemplate(index, marks) {
+        const order = index + 1;
+        return {
+            content: `Question ${order}`,
+            optionA: 'Option A',
+            optionB: 'Option B',
+            optionC: 'Option C',
+            optionD: 'Option D',
+            correctAnswer: 'A',
+            explanation: '',
+            marks,
+            questionOrder: order
+        };
+    }
+
+    async function saveExam(saveAsDraft) {
+        const token = getToken();
+        if (!token) { window.location.href = '/login'; return; }
+
+        const courseId = parseInt(document.getElementById('courseId').value, 10);
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const duration = parseInt(document.getElementById('duration').value, 10);
+        const totalMarks = parseInt(document.getElementById('totalMarks').value, 10);
+        const passingMarks = parseInt(document.getElementById('passingMarks').value, 10);
+        const questionCount = parseInt(document.getElementById('questionCount').value, 10);
+        const randomizeQuestions = document.getElementById('randomizeQuestions').checked;
+        const showResults = document.getElementById('showResults').checked;
+
+        if (!courseId || !title || questionCount < 1) {
+            document.getElementById('feedback').innerHTML = '<span style="color:red;">Please fill required fields.</span>';
+            return;
+        }
+
+        const marksPerQuestion = Math.max(1, Math.floor(totalMarks / questionCount));
+        const questions = Array.from({ length: questionCount }, (_, i) => getQuestionTemplate(i, marksPerQuestion));
+
+        const payload = {
+            title,
+            description,
+            courseId,
+            duration,
+            totalMarks,
+            passingMarks,
+            randomizeQuestions,
+            showResults,
+            saveAsDraft,
+            questions
+        };
+
+        try {
+            const res = await fetch(`/api/instructor/exams?courseId=${courseId}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Create exam failed');
+
+            document.getElementById('feedback').innerHTML = '<span style="color:green;">Exam created successfully.</span>';
+            setTimeout(() => {
+                window.location.href = '/instructor/exam-management';
+            }, 600);
+        } catch (e) {
+            document.getElementById('feedback').innerHTML = `<span style="color:red;">${e.message}</span>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const courseId = params.get('courseId');
+        if (courseId) {
+            document.getElementById('courseId').value = courseId;
+        }
+    });
+</script>
+</body>
+</html>

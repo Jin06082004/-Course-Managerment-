@@ -567,6 +567,7 @@ public class AdminController {
     /**
      * Helper method to convert User to UserDto (handles broken role FK gracefully)
      */
+    @SuppressWarnings("unused")
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());

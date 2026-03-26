@@ -1,0 +1,57 @@
+<!-- Lesson Summary Modal -->
+<div class="summary-modal hidden" id="summaryModal">
+    <div class="summary-modal-overlay" onclick="closeSummaryModal()"></div>
+    <div class="summary-modal-content">
+        <div class="summary-modal-header">
+            <h2 class="summary-modal-title">📋 Lesson Summary</h2>
+            <button class="summary-modal-close" onclick="closeSummaryModal()" title="Close">
+                <span>✕</span>
+            </button>
+        </div>
+
+        <div class="summary-modal-body">
+            <!-- Loading State -->
+            <div class="summary-loading hidden" id="summaryLoading">
+                <div class="summary-spinner"></div>
+                <p>Generating summary...</p>
+            </div>
+
+            <!-- Error State -->
+            <div class="summary-error hidden" id="summaryError">
+                <div class="summary-error-icon">⚠️</div>
+                <p id="summaryErrorText">An error occurred while generating the summary.</p>
+            </div>
+
+            <!-- Summary Content -->
+            <div class="summary-content hidden" id="summaryContent">
+                <!-- Summary Text -->
+                <div class="summary-text-section">
+                    <h3>Summary</h3>
+                    <p id="summaryText" class="summary-text"></p>
+                </div>
+
+                <!-- Key Points -->
+                <div class="summary-keypoints-section">
+                    <h3>Key Points</h3>
+                    <ul class="summary-keypoints-list" id="summaryKeypoints"></ul>
+                </div>
+
+                <!-- Summary Metadata -->
+                <div class="summary-metadata">
+                    <span class="summary-meta-item" id="summaryGeneratedTime"></span>
+                    <span class="summary-meta-item" id="summaryViewCount"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-modal-footer">
+            <button class="summary-action-btn" id="copySummaryBtn" onclick="copySummaryToClipboard()" title="Copy to clipboard">
+                <span>📋</span> Copy
+            </button>
+            <button class="summary-action-btn" id="downloadSummaryBtn" onclick="downloadSummary()" title="Download as text">
+                <span>⬇️</span> Download
+            </button>
+            <button class="summary-close-btn" onclick="closeSummaryModal()">Close</button>
+        </div>
+    </div>
+</div>

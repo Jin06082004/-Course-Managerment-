@@ -134,6 +134,32 @@ public class PaymentController {
     }
 
     /**
+     * Simulate-mode endpoint: bỏ qua MoMo thật, tự kích hoạt enrollment ngay lập tức.
+     * Chỉ hoạt động khi momo.simulate=true (local dev). Không nên dùng trên production.
+     */
+    @GetMapping("/simulate-success")
+    public ResponseEntity<?> simulateSuccess(@RequestParam String orderId) {
+        log.info("[MoMo SIMULATE] Xác nhận thanh toán giả lập: orderId={}", orderId);
+        try {
+            enrollmentService.activateEnrollmentByOrderId(orderId);
+            log.info("[MoMo SIMULATE] Enrollment kích hoạt thành công: orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("[MoMo SIMULATE] Lỗi kích hoạt enrollment: {}", e.getMessage());
+        }
+
+        // Trích courseId từ orderId (format: COURSE_{courseId}_{userId}_{uuid})
+        String courseId = "1";
+        try {
+            String[] parts = orderId.split("_");
+            if (parts.length >= 2) courseId = parts[1];
+        } catch (Exception ignored) {}
+
+        return ResponseEntity.status(302)
+                .header("Location", "/courses/" + courseId + "?payment=success")
+                .build();
+    }
+
+    /**
      * Endpoint nhận IPN (Instant Payment Notification) / Webhook từ MoMo.
      * MoMo gọi POST đến URL này để thông báo kết quả thanh toán server-to-server.
      * Bắt buộc xác thực chữ ký trước khi cập nhật trạng thái enrollment.

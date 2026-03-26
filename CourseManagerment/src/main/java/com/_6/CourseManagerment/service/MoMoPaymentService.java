@@ -34,7 +34,19 @@ public class MoMoPaymentService {
     @Value("${momo.notify-url:}")
     private String notifyUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${momo.simulate:false}")
+    private boolean simulate;
+
+    private final RestTemplate restTemplate;
+
+    public MoMoPaymentService() {
+        // Set connection and read timeout to 10s to avoid hanging on network issues
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory =
+                new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10_000);
+        factory.setReadTimeout(10_000);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     /**
      * Tạo đơn thanh toán MoMo và trả về payUrl để redirect người dùng.
@@ -45,6 +57,12 @@ public class MoMoPaymentService {
      * @return payUrl - URL chuyển hướng người dùng đến trang thanh toán MoMo
      */
     public String createPayment(String orderId, long amount, String orderInfo) {
+        // Simulation mode: skip real MoMo API, return a local confirm URL
+        if (simulate) {
+            log.info("[MoMo SIMULATE] Bỏ qua API thật, tạo URL giả lập: orderId={}, amount={}", orderId, amount);
+            return "/api/payment/simulate-success?orderId=" + orderId;
+        }
+
         if (!isConfigured()) {
             throw new RuntimeException("MoMo chưa được cấu hình. Vui lòng thiết lập momo.partner-code, momo.access-key, momo.secret-key, momo.endpoint, momo.return-url, momo.notify-url");
         }
@@ -92,8 +110,8 @@ public class MoMoPaymentService {
 
         try {
             log.info("Gửi request đến MoMo: endpoint={}, orderId={}, amount={}", endpoint, orderId, amount);
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    endpoint, HttpMethod.POST, httpEntity, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    endpoint, HttpMethod.POST, httpEntity, new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
 
             Map<String, Object> responseBody = response.getBody();
             log.info("MoMo response: {}", responseBody);

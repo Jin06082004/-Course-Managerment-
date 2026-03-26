@@ -183,14 +183,14 @@ window.AuthManager = {
             }
 
             // Reload feather icons
-            if (feather) feather.replace();
+            if (typeof feather !== 'undefined' && feather) feather.replace();
         } else {
             // User is not authenticated
             notLoggedIn.style.display = 'flex';
             loggedIn.style.display = 'none';
 
             // Reload feather icons
-            if (feather) feather.replace();
+            if (typeof feather !== 'undefined' && feather) feather.replace();
         }
     },
 

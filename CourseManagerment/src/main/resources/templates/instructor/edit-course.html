@@ -99,9 +99,36 @@
                         <input type="text" id="thumbnailUrl" name="thumbnailUrl" placeholder="https://...">
                     </div>
 
+                    <!-- Video upload (uploaded file takes precedence over external URL) -->
                     <div class="form-group">
-                        <label for="videoUrl">Intro Video URL</label>
-                        <input type="text" id="videoUrl" name="videoUrl" placeholder="https://...">
+                        <label>Course Intro Video</label>
+                        <div id="currentVideoStatus" style="margin-bottom: 8px; font-size: 13px; color: #10b981;"></div>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+                            <input type="file" id="videoFileInput"
+                                   accept="video/mp4,video/webm,video/x-matroska,video/x-msvideo,video/quicktime,.mp4,.webm,.mkv,.avi,.mov"
+                                   style="display:none;">
+                            <button type="button" class="btn btn-secondary" id="uploadVideoBtn"
+                                    onclick="document.getElementById('videoFileInput').click()">
+                                &#128249; Upload Video File
+                            </button>
+                            <div id="uploadProgressWrap" style="display:none; flex:1; min-width:220px;">
+                                <div style="background:#e5e7eb; border-radius:4px; height:8px; overflow:hidden;">
+                                    <div id="uploadProgressBar"
+                                         style="background:#7c3aed; height:8px; width:0; transition:width 0.2s;"></div>
+                                </div>
+                                <span id="uploadProgressText" style="font-size:12px; color:#6b7280;"></span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="localVideoPath" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="videoUrl">Or: External Video URL
+                            <small style="color:#9ca3af; font-weight:normal;">
+                                (leave blank if using an uploaded file above)
+                            </small>
+                        </label>
+                        <input type="text" id="videoUrl" name="videoUrl"
+                               placeholder="https://example.com/video.mp4">
                     </div>
 
                     <div style="margin-top: 20px;">
@@ -178,7 +205,19 @@
                 document.getElementById('duration').value = course.duration || 0;
                 document.getElementById('status').value = course.status || 'DRAFT';
                 document.getElementById('thumbnailUrl').value = course.thumbnailUrl || '';
-                document.getElementById('videoUrl').value = course.videoUrl || '';
+                const currentVideoUrl = course.videoUrl || '';
+                if (currentVideoUrl.startsWith('local:')) {
+                    document.getElementById('localVideoPath').value = currentVideoUrl;
+                    document.getElementById('videoUrl').value = '';
+                    document.getElementById('currentVideoStatus').textContent = '\u2713 Video file uploaded to server';
+                } else {
+                    document.getElementById('localVideoPath').value = '';
+                    document.getElementById('videoUrl').value = currentVideoUrl;
+                    if (currentVideoUrl) {
+                        document.getElementById('currentVideoStatus').textContent = '\uD83D\uDD17 External URL set';
+                        document.getElementById('currentVideoStatus').style.color = '#6366f1';
+                    }
+                }
 
                 const catSel = document.getElementById('category');
                 catSel.innerHTML = '<option value="">Select category...</option>';
@@ -211,7 +250,8 @@
                 duration: parseInt(document.getElementById('duration').value) || 0,
                 status: document.getElementById('status').value,
                 thumbnailUrl: document.getElementById('thumbnailUrl').value.trim(),
-                videoUrl: document.getElementById('videoUrl').value.trim()
+                videoUrl: document.getElementById('localVideoPath').value ||
+                           document.getElementById('videoUrl').value.trim()
             };
 
             const btn = document.getElementById('saveBtn');
@@ -280,6 +320,68 @@
         });
 
         document.addEventListener('DOMContentLoaded', loadCourse);
+
+        // ── Video upload ─────────────────────────────────────────────────────
+        document.getElementById('videoFileInput').addEventListener('change', async function () {
+            const file = this.files[0];
+            if (!file || !courseId) return;
+
+            const btn       = document.getElementById('uploadVideoBtn');
+            const wrap      = document.getElementById('uploadProgressWrap');
+            const bar       = document.getElementById('uploadProgressBar');
+            const text      = document.getElementById('uploadProgressText');
+            const status    = document.getElementById('currentVideoStatus');
+
+            btn.disabled = true;
+            wrap.style.display = 'flex';
+            bar.style.width = '0';
+            text.textContent = 'Uploading…';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const token = localStorage.getItem('authToken');
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    bar.style.width = pct + '%';
+                    text.textContent = pct + '%  (' + (e.loaded / 1048576).toFixed(1) + ' MB / ' + (e.total / 1048576).toFixed(1) + ' MB)';
+                }
+            });
+
+            xhr.addEventListener('load', function () {
+                btn.disabled = false;
+                wrap.style.display = 'none';
+                if (xhr.status === 200) {
+                    const result = JSON.parse(xhr.responseText);
+                    document.getElementById('localVideoPath').value = result.videoUrl;
+                    document.getElementById('videoUrl').value = '';
+                    status.style.color = '#10b981';
+                    status.textContent = '\u2713 Uploaded: ' + file.name;
+                } else {
+                    let msg = 'Upload failed';
+                    try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+                    status.style.color = '#ef4444';
+                    status.textContent = '\u26A0 ' + msg;
+                }
+            });
+
+            xhr.addEventListener('error', function () {
+                btn.disabled = false;
+                wrap.style.display = 'none';
+                status.style.color = '#ef4444';
+                status.textContent = '\u26A0 Network error during upload';
+            });
+
+            xhr.open('POST', '/api/instructor/courses/' + courseId + '/upload-video');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            xhr.send(formData);
+
+            // Reset file input so the same file can be re-selected if needed
+            this.value = '';
+        });
     </script>
 </body>
 </html>

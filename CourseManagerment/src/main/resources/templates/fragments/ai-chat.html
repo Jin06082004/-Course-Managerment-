@@ -1,0 +1,51 @@
+<!-- AI Assistant Chat Sidebar -->
+<div class="ai-chat-sidebar hidden" id="aiChatSidebar">
+    <div class="ai-chat-header">
+        <div class="ai-chat-title-bar">
+            <h3 class="ai-chat-title">
+                <span class="ai-icon">🤖</span> AI Assistant
+            </h3>
+            <button class="ai-chat-close-btn" id="closeChatBtn" onclick="toggleAIChat()" title="Close chat">
+                <span>✕</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="ai-chat-suggested-section hidden" id="suggestedSection">
+        <div class="ai-chat-suggestions-label">Suggested Questions:</div>
+        <div class="ai-chat-suggestions" id="suggestedQuestions">
+            <!-- Suggestions will be loaded dynamically -->
+        </div>
+    </div>
+
+    <div class="ai-chat-messages" id="chatMessages">
+        <div class="ai-chat-welcome">
+            <p>👋 Ask me anything about this lesson!</p>
+            <p class="ai-chat-hint">I can help explain concepts, answer your questions, and provide examples.</p>
+        </div>
+    </div>
+
+    <div class="ai-chat-input-section">
+        <div class="ai-chat-input-wrapper">
+            <textarea 
+                id="aiMessageInput" 
+                class="ai-chat-input" 
+                placeholder="Ask a question..."
+                rows="1"
+                onkeypress="handleChatKeypress(event)"></textarea>
+            <button class="ai-chat-send-btn" id="sendChatBtn" onclick="sendAIMessage()" title="Send message">
+                <span>➤</span>
+            </button>
+        </div>
+        <div class="ai-chat-actions">
+            <button class="ai-chat-action-btn" id="clearChatBtn" onclick="clearAIChatHistory()" title="Clear history">
+                <span>🗑️</span> Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- AI Chat Toggle Button (Floating) -->
+<button class="ai-chat-toggle-btn" id="aiChatToggleBtn" onclick="toggleAIChat()" title="Open AI Assistant">
+    <span class="ai-chat-toggle-icon">🤖</span>
+</button>

@@ -145,6 +145,8 @@
                             <a href="/instructor/courses/${course.id}/edit" class="action-button">Edit</a>
                             <a href="/instructor/courses/${course.id}/students" class="action-button secondary">Students</a>
                             <a href="/instructor/courses/${course.id}/content" class="action-button secondary">Content</a>
+                            <a href="/instructor/quiz-builder?courseId=${course.id}" class="action-button secondary">+ Quiz</a>
+                            <a href="/instructor/exam-builder?courseId=${course.id}" class="action-button secondary">+ Exam</a>
                             <button class="action-button danger" onclick="deleteCourse(${course.id})">Delete</button>
                         </div>
                     </div>

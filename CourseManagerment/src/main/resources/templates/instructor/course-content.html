@@ -52,13 +52,24 @@
                 </div>
 
                 <div class="instructor-section">
-                <div class="placeholder-section" style="border:none; background:transparent; padding:2rem 1rem;">
-                    <div class="placeholder-icon">📚</div>
-                    <h3>Lessons &amp; materials</h3>
-                    <p>Structured lessons, video, and quizzes will be managed here.</p>
-                    <p style="margin-top:0.5rem;">For now, update details on the edit page.</p>
-                    <a href="#" id="editCourseLink" class="action-button" style="margin-top:1rem; display:inline-block;">Edit course details</a>
-                </div>
+                    <h3>Quick Actions</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Video</div>
+                            <div class="info-value">Update intro video URL for this course.</div>
+                            <a href="#" id="editVideoLink" class="action-button" style="margin-top:0.75rem; display:inline-block;">Add / Edit Video</a>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Quiz</div>
+                            <div class="info-value">Create assessment quiz linked to this course.</div>
+                            <a href="#" id="addQuizLink" class="action-button secondary" style="margin-top:0.75rem; display:inline-block;">Add Quiz</a>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Exam</div>
+                            <div class="info-value">Create final exam with weighted questions.</div>
+                            <a href="#" id="addExamLink" class="action-button secondary" style="margin-top:0.75rem; display:inline-block;">Add Exam</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -96,7 +107,9 @@
 
                 document.getElementById('courseTitle').textContent = course.title;
                 document.getElementById('statusBadge').innerHTML = getStatusBadge(course.status);
-                document.getElementById('editCourseLink').href = `/instructor/courses/${courseId}/edit`;
+                document.getElementById('editVideoLink').href = `/instructor/courses/${courseId}/edit#videoUrl`;
+                document.getElementById('addQuizLink').href = `/instructor/quiz-builder?courseId=${courseId}`;
+                document.getElementById('addExamLink').href = `/instructor/exam-builder?courseId=${courseId}`;
 
                 document.getElementById('courseInfo').innerHTML = `
                     <div class="info-item">

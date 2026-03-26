@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning | CourseManager</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/ai-chat.css}">
+    <link rel="stylesheet" th:href="@{/css/summary-modal.css}">
     <style>
         .learn-page {
             min-height: 100vh;
@@ -270,7 +272,16 @@
         <section class="video-card">
             <h2>Lesson Video</h2>
             <video id="lessonVideo" class="video-frame" controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsinline></video>
+            <iframe id="youtubeFrame" class="video-frame" style="display:none; border:none;"
+                    allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
             <p id="videoHint" class="hint">Video will appear here when available.</p>
+            
+            <!-- Summarize Button -->
+            <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                <button class="summarize-btn" id="summarizeBtn" onclick="generateSummary()" title="Generate AI summary of this lesson">
+                    <span>📋</span> Get Summary
+                </button>
+            </div>
         </section>
 
         <section class="quiz-card hidden" id="quizSection">
@@ -306,11 +317,17 @@
             <p class="hint">You need to purchase this course to access downloadable resources.</p>
         </section>
     </div>
+    <!-- AI Chat Component -->
+    <th:block th:insert="~{fragments/ai-chat}"></th:block>
+    <!-- Summary Modal Component -->
+    <th:block th:insert="~{fragments/summary-modal}"></th:block>
 </div>
 
 <script th:src="@{/js/auth.js}"></script>
 <script th:src="@{/js/toast.js}"></script>
 <script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/ai-chat.js}"></script>
+<script th:src="@{/js/summary.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 <script>
     var activeLessonId = null;
@@ -448,7 +465,21 @@
         });
     }
 
-    function attachVideoSource(videoEl, secureUrl, streamType) {
+    function attachVideoSource(videoEl, secureUrl, streamType, videoType, embedUrl) {
+        var youtubeFrame = document.getElementById('youtubeFrame');
+
+        // YouTube: use iframe embed
+        if (videoType === 'youtube' && embedUrl) {
+            if (videoEl) videoEl.style.display = 'none';
+            if (youtubeFrame) {
+                youtubeFrame.src = embedUrl;
+                youtubeFrame.style.display = 'block';
+            }
+            return;
+        }
+
+        // Local or external: use <video> element
+        if (youtubeFrame) youtubeFrame.style.display = 'none';
         if (!videoEl || !secureUrl) return;
 
         if (hlsPlayer) {
@@ -739,7 +770,7 @@
                 });
 
                 var securePayload = await ApiService.getSecureVideoUrl(courseId);
-                if (securePayload && securePayload.secureUrl) {
+                if (securePayload && (securePayload.secureUrl || securePayload.videoType)) {
                     maxWatchedSeconds = 0;
                     allowedTime = 0;
                     antiSkipEnabled = true;
@@ -752,8 +783,26 @@
                         loadSavedProgress(player);
                     });
 
-                    attachVideoSource(player, securePayload.secureUrl, securePayload.streamType);
-                    hint.textContent = 'Protected stream enabled. Download controls are limited.';
+                    var videoSrc = securePayload.secureUrl;
+                    // For local files: use /play?t=TOKEN endpoint instead of the HMAC stream URL.
+                    // The HTML5 video element cannot send Bearer headers, so we pass the JWT
+                    // as a query param. JwtAuthenticationFilter reads it from ?t=.
+                    if (securePayload.videoType === 'local' || securePayload.videoType === 'external') {
+                        var token = (window.AuthManager && window.AuthManager.getToken) ? window.AuthManager.getToken() : null;
+                        if (token) {
+                            videoSrc = '/api/videos/' + courseId + '/play?t=' + encodeURIComponent(token);
+                        }
+                    }
+
+                    attachVideoSource(player, videoSrc, securePayload.streamType,
+                                      securePayload.videoType, securePayload.embedUrl);
+                    if (securePayload.videoType === 'youtube') {
+                        hint.textContent = 'Playing YouTube video.';
+                        // YouTube iframe manages its own controls — disable anti-skip
+                        antiSkipEnabled = false;
+                    } else {
+                        hint.textContent = 'Protected stream enabled. Download controls are limited.';
+                    }
                 } else {
                     player.style.display = 'none';
                     hint.textContent = 'This lesson video is unavailable.';

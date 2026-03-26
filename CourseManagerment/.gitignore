@@ -32,3 +32,19 @@ build/
 ### VS Code ###
 .vscode/
 node_modules/
+
+### Environment Variables (Secrets) ###
+.env
+.env.local
+.env.*.local
+
+application.properties
+uploads/
+IMPLEMENTATION.md
+IMPLEMNTATION-SUMMARY.md
+MOMO-DEV-SETUP.md
+
+set-momo-env.ps1
+startup.log
+TESTING-GUIDE.md
+

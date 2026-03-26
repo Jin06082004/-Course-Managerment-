@@ -28,19 +28,25 @@ public class DataInitializer {
             
             // Create ADMIN role
             if (!roleRepository.existsByName("ADMIN")) {
-                roleRepository.save(new Role(null, "ADMIN"));
+                Role adminRole = new Role();
+                adminRole.setName("ADMIN");
+                roleRepository.save(adminRole);
                 log.info("ADMIN role created");
             }
             
             // Create INSTRUCTOR role
             if (!roleRepository.existsByName("INSTRUCTOR")) {
-                roleRepository.save(new Role(null, "INSTRUCTOR"));
+                Role instructorRole = new Role();
+                instructorRole.setName("INSTRUCTOR");
+                roleRepository.save(instructorRole);
                 log.info("INSTRUCTOR role created");
             }
             
             // Create STUDENT role
             if (!roleRepository.existsByName("STUDENT")) {
-                roleRepository.save(new Role(null, "STUDENT"));
+                Role studentRole = new Role();
+                studentRole.setName("STUDENT");
+                roleRepository.save(studentRole);
                 log.info("STUDENT role created");
             }
             
